@@ -1,0 +1,10 @@
+batch_size: 32
+epochs: 1
+learning_rate: 0.0001
+max_vocab_size: 192
+data_path: "roneneldan/TinyStories"
+save_dir: "checkpoints"
+log_every_steps: 1
+wandb: true
+wandb_project: "nnfs"
+wandb_run_name: gpt2_tinystories
