@@ -52,10 +52,10 @@ nnfs/
 
 ### 🗗 Model Training Logs
 
-| Model | # Parameters | Training Log | Eval Loss |
-|-------|--------------|--------------|-----------|
-| GPT1  | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/fhjgffh9?nw=nwuserritvik19) | 0.74346   |
-| GPT2  | 3,487,232    | [link](https://wandb.ai/ritvik19/nnfs/runs/rdr6rk7j?nw=nwuserritvik19) | 0.68371   |
+| Model | Architecture | # Parameters | Training Log | Eval Loss |
+|-------|--------------|--------------|--------------|-----------|
+| GPT1  | [Architecture](./models_gallery/gpt1.md) | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/fhjgffh9?nw=nwuserritvik19) | 0.74346   |
+| GPT2  | [Architecture](./models_gallery/gpt2.md) | 3,487,232    | [link](https://wandb.ai/ritvik19/nnfs/runs/rdr6rk7j?nw=nwuserritvik19) | 0.68371   |
 
 ---
 
