@@ -7,7 +7,7 @@ from .dropout import Dropout
 from .linear import Linear
 
 
-class CausalAttention(nn.Module):
+class CausalMultiHeadAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, dropout: float = 0.1):
         super().__init__()
         assert d_model % n_heads == 0, "d_model must be divisible by n_heads"

@@ -76,7 +76,7 @@ flowchart TD
 Given input tensor $x \in \mathbb{R}^{B \times T \times d_{\text{model}}}$:
 
 1. **Self-Attention Sub-layer**:
-   $$\text{x}_{\text{attn}} = \text{CausalAttention}(x)$$
+   $$\text{x}_{\text{attn}} = \text{CausalMultiHeadAttention}(x)$$
    $$\text{x}_{\text{res1}} = \text{LayerNorm}_1(x + \text{x}_{\text{attn}})$$
 
 2. **Feed-Forward Sub-layer**:
@@ -87,7 +87,7 @@ Given input tensor $x \in \mathbb{R}^{B \times T \times d_{\text{model}}}$:
 
 ## ⚙️ Component Breakdown
 
-### 1. `CausalAttention`
+### 1. `CausalMultiHeadAttention`
 Computes scaled dot-product attention over single input tensor projected into Queries ($Q$), Keys ($K$), and Values ($V$):
 $$Q, K, V = \text{Linear}_{d_{\text{model}} \rightarrow 3d_{\text{model}}}(x)$$
 $$\text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{Q K^T}{\sqrt{d_{\text{head}}}} + M\right) V$$

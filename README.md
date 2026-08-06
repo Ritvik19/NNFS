@@ -18,7 +18,7 @@ nnfs/
 ├── configs/                   # Model and pipeline configuration files
 ├── nnfs/                      # Core neural network library from scratch
 │   ├── activations/           # Custom activation functions (GELU, ReLU)
-│   ├── layers/                # Basic layers (Linear, TiedLinear, Embedding, LayerNorm, Dropout, CausalAttention, MLP)
+│   ├── layers/                # Basic layers (Linear, TiedLinear, Embedding, LayerNorm, Dropout, CausalMultiHeadAttention, MLP)
 │   ├── losses/                # Loss functions (CrossEntropy)
 │   ├── modules/               # Composite blocks (GPT1TransformerBlock, GPT2TransformerBlock)
 │   ├── models/                # Complete model architectures (GPT-1, GPT-2)
@@ -41,7 +41,7 @@ nnfs/
 * **GPT-2**: Pre-layer-normalization decoder-only transformer with final layer norm prior to the tied projection head.
 
 ### 📐 Layers & Modules
-* **`CausalAttention`**: Scaled dot-product multi-head causal self-attention with masking.
+* **`CausalMultiHeadAttention`**: Scaled dot-product multi-head causal self-attention with masking.
 * **`Linear` & `TiedLinear`**: Weight-tied output classification head reusing token embedding weights.
 * **`LayerNorm`**: Standard layer normalization with learnable gain and bias.
 * **`MLP`**: Feed-forward expansion network (`d_model` $\rightarrow$ `d_ff` $\rightarrow$ `d_model`) with GELU activation.

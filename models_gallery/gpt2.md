@@ -78,7 +78,7 @@ Given block input $x \in \mathbb{R}^{B \times T \times d_{\text{model}}}$:
 
 1. **Self-Attention Sub-layer**:
    $$\text{x}_{\text{norm1}} = \text{LayerNorm}_1(x)$$
-   $$\text{x}_{\text{res1}} = x + \text{CausalAttention}(\text{x}_{\text{norm1}})$$
+   $$\text{x}_{\text{res1}} = x + \text{CausalMultiHeadAttention}(\text{x}_{\text{norm1}})$$
 
 2. **Feed-Forward Sub-layer**:
    $$\text{x}_{\text{norm2}} = \text{LayerNorm}_2(\text{x}_{\text{res1}})$$
