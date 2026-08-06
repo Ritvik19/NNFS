@@ -1,0 +1,95 @@
+import torch
+import torch.nn as nn
+
+from nnfs.layers import Dropout, Embedding, LayerNorm, Linear, TiedLinear
+from nnfs.modules import PaLMTransformerBlock
+
+
+class PaLMConfig:
+    def __init__(
+        self,
+        vocab_size: int,
+        block_size: int,
+        d_model: int,
+        n_layers: int,
+        n_heads: int,
+        d_ff: int,
+        dropout: float = 0.1,
+    ):
+        self.vocab_size = vocab_size
+        self.block_size = block_size
+        self.d_model = d_model
+        self.n_layers = n_layers
+        self.n_heads = n_heads
+        self.d_ff = d_ff
+        self.dropout = dropout
+
+
+class PaLM(nn.Module):
+    """Pathways Language Model (PaLM) decoder architecture.
+
+    Features:
+    - Multi-Query Attention (MQA)
+    - Rotary Position Embeddings (RoPE)
+    - SwiGLU Activation Feed-Forward Networks
+    - Parallel Transformer Layers
+    - Shared Input-Output Weight Tying
+    - Bias-Free Dense Kernels
+    """
+
+    def __init__(self, config: PaLMConfig):
+        super().__init__()
+        self.config = config
+        self.tok_embed = Embedding(config.vocab_size, config.d_model)
+        self.drop = Dropout(config.dropout)
+        self.blocks = nn.ModuleList(
+            [
+                PaLMTransformerBlock(
+                    d_model=config.d_model,
+                    n_heads=config.n_heads,
+                    d_ff=config.d_ff,
+                    dropout=config.dropout,
+                    max_position_embeddings=config.block_size,
+                )
+                for _ in range(config.n_layers)
+            ]
+        )
+        self.ln_f = LayerNorm(config.d_model)
+        self.lm_head = TiedLinear(self.tok_embed, bias=False)
+        self.apply(self._init_weights)
+
+    def _init_weights(self, module: nn.Module) -> None:
+        if isinstance(module, Linear):
+            if hasattr(module, "weights") and isinstance(module.weights, nn.Parameter):
+                nn.init.normal_(module.weights, mean=0.0, std=0.02)
+            if module.bias is not None:
+                nn.init.zeros_(module.bias)
+        elif isinstance(module, Embedding):
+            nn.init.normal_(module.embed, mean=0.0, std=0.02)
+
+    def forward(self, idx: torch.Tensor, position_ids: torch.Tensor | None = None) -> torch.Tensor:
+        _, T = idx.shape
+        assert T <= self.config.block_size, f"sequence length {T} > block_size {self.config.block_size}"
+
+        x = self.drop(self.tok_embed(idx))
+        for block in self.blocks:
+            x = block(x)
+        return self.lm_head(self.ln_f(x))
+
+    def save_pretrained(self, save_path: str) -> None:
+        torch.save(self.config, save_path + "/config.pth")
+        torch.save(self.state_dict(), save_path + "/model.pth")
+
+    def load_pretrained(self, load_path: str, map_location: str | torch.device | None = None) -> None:
+        self.config = torch.load(
+            load_path + "/config.pth",
+            map_location=map_location,
+            weights_only=False,
+        )
+        self.load_state_dict(
+            torch.load(
+                load_path + "/model.pth",
+                map_location=map_location,
+                weights_only=True,
+            )
+        )

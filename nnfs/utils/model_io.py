@@ -8,13 +8,15 @@ from nnfs.models import *
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 
 Tokenizer = Union[CharTokenizer]
-Model = Union[GPT1, GPT2]
-Config = Union[GPT1Config, GPT2Config]
+Model = Union[GPT1, GPT2, PaLM]
+Config = Union[GPT1Config, GPT2Config, PaLMConfig]
 
 MODEL_REGISTRY = {
     "gpt1": (GPT1, GPT1Config),
     "gpt2": (GPT2, GPT2Config),
+    "palm": (PaLM, PaLMConfig),
 }
+
 
 
 def build_model(config_file_path: str):
