@@ -8,6 +8,7 @@ from .tied_linear import TiedLinear
 from .swiglu_mlp import SwiGLUMLP
 from .rope import RotaryEmbedding, apply_rotary_pos_emb
 from .multi_query_attention import MultiQueryAttention
+from .sinusoidal_positional_encoding import SinusoidalPositionalEncoding
 
 __all__ = [
     "Embedding",
@@ -21,4 +22,5 @@ __all__ = [
     "RotaryEmbedding",
     "apply_rotary_pos_emb",
     "MultiQueryAttention",
+    "SinusoidalPositionalEncoding",
 ]

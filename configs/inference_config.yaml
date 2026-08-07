@@ -1,5 +1,5 @@
-model_name: "palm"
-model_path: "checkpoints/palm"
+model_name: "vaswani_decoder_only"
+model_path: "checkpoints/transformer"
 temperature: 0.6
 top_p: 0.9
 top_k: 40

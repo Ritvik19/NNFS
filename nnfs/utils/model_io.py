@@ -8,13 +8,14 @@ from nnfs.models import *
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 
 Tokenizer = Union[CharTokenizer]
-Model = Union[GPT1, GPT2, PaLM]
-Config = Union[GPT1Config, GPT2Config, PaLMConfig]
+Model = Union[GPT1, GPT2, PaLM, VaswaniDecoderOnly]
+Config = Union[GPT1Config, GPT2Config, PaLMConfig, VaswaniDecoderOnlyConfig]
 
 MODEL_REGISTRY = {
     "gpt1": (GPT1, GPT1Config),
     "gpt2": (GPT2, GPT2Config),
     "palm": (PaLM, PaLMConfig),
+    "vaswani_decoder_only": (VaswaniDecoderOnly, VaswaniDecoderOnlyConfig),
 }
 
 
