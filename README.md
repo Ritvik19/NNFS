@@ -1,4 +1,5 @@
 # NNFS
+
 Neural Networks From Scratch
 
 > Clean, modular, and readable miniature implementations of landmark deep learning models built ground-up.
@@ -37,40 +38,48 @@ nnfs/
 ## 🧩 Implemented Components & Models
 
 ### 🗂️ Models
-* **GPT-1**: Post-layer-normalization decoder-only transformer with learned positional embeddings and tied weight output head.
-* **GPT-2**: Pre-layer-normalization decoder-only transformer with final layer norm prior to the tied projection head.
-* **PaLM**: Parallel decoder-only transformer with Multi-Query Attention (MQA), SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free kernels.
-* **Vaswani Decoder-Only**: Decoder-only adaptation of the original Transformer (Vaswani et al., 2017) featuring sinusoidal positional encodings, $\sqrt{d_{\text{model}}}$ embedding scaling, ReLU FFN, and post-LN / pre-LN options.
+
+- **GPT-1**: Post-layer-normalization decoder-only transformer with learned positional embeddings and tied weight output head.
+- **GPT-2**: Pre-layer-normalization decoder-only transformer with final layer norm prior to the tied projection head.
+- **PaLM**: Parallel decoder-only transformer with Multi-Query Attention (MQA), SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free kernels.
+- **Transformer**: Modular decoder-only transformer with configurable positional encodings (sinusoidal, learned, ALiBi, RoPE, none), configurable activation functions (ReLU, GELU, SwiGLU), and post-LN / pre-LN options.
 
 ### 📐 Layers & Modules ([Overview](./docs/layers/README.md))
-* **[`SinusoidalPositionalEncoding`](./docs/layers/sinusoidal_positional_encoding.md)**: Fixed sine/cosine positional encodings from Vaswani et al. (2017).
-* **[`MultiQueryAttention`](./docs/layers/multi_query_attention.md)**: Multi-Query Attention with single shared Key/Value head and RoPE.
-* **[`SwiGLUMLP`](./docs/layers/swiglu_mlp.md)**: Feed-forward expansion network with SwiGLU gating activation.
-* **[`RotaryEmbedding`](./docs/layers/rope.md)**: Rotary position embeddings (RoPE) applied to query and key projections.
-* **[`CausalMultiHeadAttention`](./docs/layers/causal_multi_head_attention.md)**: Scaled dot-product multi-head causal self-attention with masking.
-* **[`Linear`](./docs/layers/linear.md) & [`TiedLinear`](./docs/layers/tied_linear.md)**: Weight-tied output classification head reusing token embedding weights.
-* **[`LayerNorm`](./docs/layers/layer_norm.md)**: Standard layer normalization with learnable gain and bias.
-* **[`MLP`](./docs/layers/mlp.md)**: Feed-forward expansion network (`d_model` $\rightarrow$ `d_ff` $\rightarrow$ `d_model`) with GELU or ReLU activation.
-* **[`Embedding`](./docs/layers/embedding.md)**: Lookup embedding matrix for input tokens and positions.
-* **[`Dropout`](./docs/layers/dropout.md)**: Inverted dropout for regularization during training.
+
+- **[`SinusoidalPositionalEncoding`](./docs/layers/sinusoidal_positional_encoding.md)**: Fixed sine/cosine positional encodings from Vaswani et al. (2017).
+- **[`MultiQueryAttention`](./docs/layers/multi_query_attention.md)**: Multi-Query Attention with single shared Key/Value head and RoPE.
+- **[`SwiGLUMLP`](./docs/layers/swiglu_mlp.md)**: Feed-forward expansion network with SwiGLU gating activation.
+- **[`RotaryEmbedding`](./docs/layers/rope.md)**: Rotary position embeddings (RoPE) applied to query and key projections.
+- **[`CausalMultiHeadAttention`](./docs/layers/causal_multi_head_attention.md)**: Scaled dot-product multi-head causal self-attention with masking.
+- **[`Linear`](./docs/layers/linear.md) & [`TiedLinear`](./docs/layers/tied_linear.md)**: Weight-tied output classification head reusing token embedding weights.
+- **[`LayerNorm`](./docs/layers/layer_norm.md)**: Standard layer normalization with learnable gain and bias.
+- **[`MLP`](./docs/layers/mlp.md)**: Feed-forward expansion network (`d_model` $\rightarrow$ `d_ff` $\rightarrow$ `d_model`) with GELU or ReLU activation.
+- **[`Embedding`](./docs/layers/embedding.md)**: Lookup embedding matrix for input tokens and positions.
+- **[`Dropout`](./docs/layers/dropout.md)**: Inverted dropout for regularization during training.
 
 ### ⚡ Activations ([Overview](./docs/activations/README.md))
-* **[`ReLU`](./docs/activations/relu.md)**: Piecewise linear non-linearity ($\max(0, x)$).
-* **[`GELU`](./docs/activations/gelu.md)**: Gaussian Error Linear Unit activation with fast tanh approximation.
-* **[`SwiGLU`](./docs/activations/swiglu.md)**: Swish-Gated Linear Unit ($\text{Swish}_{\beta}(\text{gate}) \odot \text{up}$).
+
+- **[`ReLU`](./docs/activations/relu.md)**: Piecewise linear non-linearity ($\max(0, x)$).
+- **[`GELU`](./docs/activations/gelu.md)**: Gaussian Error Linear Unit activation with fast tanh approximation.
+- **[`SwiGLU`](./docs/activations/swiglu.md)**: Swish-Gated Linear Unit ($\text{Swish}_{\beta}(\text{gate}) \odot \text{up}$).
 
 ### 🔤 Preprocessing
-* **`CharTokenizer`**: Character-level vocabulary encoder/decoder with special tokens (`<pad>`, `<unk>`, `<bos>`, `<eos>`).
+
+- **`CharTokenizer`**: Character-level vocabulary encoder/decoder with special tokens (`<pad>`, `<unk>`, `<bos>`, `<eos>`).
 
 ### 🗗 Model Training Logs
 
-| Model | Architecture | # Parameters | Training Log | Eval Loss |
-|-------|--------------|--------------|--------------|-----------|
-| Transformer | [Architecture](./docs/models/vaswani_decoder_only.md) | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/stugg5kc?nw=nwuserritvik19) | 0.50835 |
-| GPT1  | [Architecture](./docs/models/gpt1.md) | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/fhjgffh9?nw=nwuserritvik19) | 0.51363   |
-| GPT2  | [Architecture](./docs/models  /gpt2.md) | 3,487,232    | [link](https://wandb.ai/ritvik19/nnfs/runs/rdr6rk7j?nw=nwuserritvik19) | 0.47952   |
-| PaLM  | [Architecture](./docs/models/palm.md) | 3,869,184    | [Link](https://wandb.ai/ritvik19/nnfs/runs/ojgu35k6?nw=nwuserritvik19) | 0.42843 |
-
+| Model                    | Architecture                                 | # Parameters | Training Log                                                           | Train Loss | Eval Loss |
+| ------------------------ | -------------------------------------------- | ------------ | ---------------------------------------------------------------------- | ---------- | --------- |
+| Transformer              | [Architecture](./docs/models/transformer.md) | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/stugg5kc?nw=nwuserritvik19) | 0.57989    | 0.50835   |
+| Transformer - GELU       | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/4vlaylw0?nw=nwuserritvik19) | 0.50243    | 0.48441   |
+| Transformer - SwiGLU     | -                                            | 4,268,032    | [link](https://wandb.ai/ritvik19/nnfs/runs/23io8gg9?nw=nwuserritvik19) | 0.50665    | 0.47742   |
+| Transformer - Learned PE | -                                            | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/o4jjrvkx?nw=nwuserritvik19) | 0.5911     | 0.52374   |
+| Transformer - ALiBi      | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/gsk5gty0?nw=nwuserritvik19) | 0.51397    | 0.46871   |
+| Transformer - RoPE       | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/stfws7au?nw=nwuserritvik19) | 0.50446    | 0.47498   |
+| GPT1                     | [Architecture](./docs/models/gpt1.md)        | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/fhjgffh9?nw=nwuserritvik19) | 0.63432    | 0.51363   |
+| GPT2                     | [Architecture](./docs/models/gpt2.md)        | 3,487,232    | [link](https://wandb.ai/ritvik19/nnfs/runs/rdr6rk7j?nw=nwuserritvik19) | 0.56123    | 0.47952   |
+| PaLM                     | [Architecture](./docs/models/palm.md)        | 3,869,184    | [Link](https://wandb.ai/ritvik19/nnfs/runs/ojgu35k6?nw=nwuserritvik19) | 0.42648    | 0.42843   |
 
 ---
 
@@ -97,7 +106,8 @@ To launch training using configured YAML parameters:
 python src/train.py --model-config configs/gpt2_config.yaml --train-config configs/train_config.yaml
 ```
 
-*Or run via the quick script:*
+_Or run via the quick script:_
+
 ```bash
 bash run.sh
 ```

@@ -5,15 +5,16 @@ import unittest
 import torch
 import torch.nn as nn
 
+from nnfs.activations import GELU, ReLU, SwiGLU
 from nnfs.layers import SinusoidalPositionalEncoding
-from nnfs.models import VaswaniDecoderOnly, VaswaniDecoderOnlyConfig
-from nnfs.modules import VaswaniTransformerBlock
+from nnfs.models import Transformer, TransformerConfig
+from nnfs.modules import TransformerBlock
 from nnfs.utils import build_model, generate
 
 
-class TestVaswaniDecoderOnly(unittest.TestCase):
+class TestTransformer(unittest.TestCase):
     def setUp(self):
-        self.config = VaswaniDecoderOnlyConfig(
+        self.config = TransformerConfig(
             vocab_size=100,
             block_size=32,
             d_model=64,
@@ -22,8 +23,10 @@ class TestVaswaniDecoderOnly(unittest.TestCase):
             d_ff=128,
             dropout=0.1,
             norm_first=False,
+            positional_encoding="sinusoidal",
+            activation="relu",
         )
-        self.model = VaswaniDecoderOnly(self.config)
+        self.model = Transformer(self.config)
 
     def test_sinusoidal_positional_encoding(self):
         pe_layer = SinusoidalPositionalEncoding(max_len=32, d_model=64)
@@ -33,9 +36,9 @@ class TestVaswaniDecoderOnly(unittest.TestCase):
         self.assertAlmostEqual(pe_out[0, 0].item(), 0.0, places=5)
         self.assertAlmostEqual(pe_out[0, 1].item(), 1.0, places=5)
 
-    def test_vaswani_transformer_block(self):
-        block_post_ln = VaswaniTransformerBlock(d_model=64, n_heads=4, d_ff=128, norm_first=False)
-        block_pre_ln = VaswaniTransformerBlock(d_model=64, n_heads=4, d_ff=128, norm_first=True)
+    def test_transformer_block(self):
+        block_post_ln = TransformerBlock(d_model=64, n_heads=4, d_ff=128, norm_first=False)
+        block_pre_ln = TransformerBlock(d_model=64, n_heads=4, d_ff=128, norm_first=True)
 
         x = torch.randn(2, 8, 64)
         out_post = block_post_ln(x)
@@ -93,7 +96,7 @@ class TestVaswaniDecoderOnly(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(tmp_dir, "config.pth")))
             self.assertTrue(os.path.exists(os.path.join(tmp_dir, "model.pth")))
 
-            loaded_model = VaswaniDecoderOnly(self.config)
+            loaded_model = Transformer(self.config)
             loaded_model.load_pretrained(tmp_dir)
 
             x = torch.randint(0, self.config.vocab_size, (2, 8))
@@ -105,8 +108,9 @@ class TestVaswaniDecoderOnly(unittest.TestCase):
             torch.testing.assert_close(out_orig, out_loaded)
 
     def test_build_model_integration(self):
-        model = build_model("configs/vaswani_decoder_only_config.yaml")
-        self.assertIsInstance(model, VaswaniDecoderOnly)
+        model = build_model("configs/transformer_config.yaml")
+        self.assertIsInstance(model, Transformer)
+
         x = torch.randint(0, 256, (2, 10))
         out = model(x)
         self.assertEqual(out.shape, (2, 10, 256))
@@ -117,6 +121,49 @@ class TestVaswaniDecoderOnly(unittest.TestCase):
         generated = generate(self.model, idx, max_new_tokens=max_new_tokens)
         self.assertEqual(generated.shape, (1, 3 + max_new_tokens))
         torch.testing.assert_close(generated[0, :3], idx[0])
+
+    def test_configurable_positional_encodings(self):
+        encodings = ["sinusoidal", "learned", "alibi", "rope", "none"]
+        for enc in encodings:
+            with self.subTest(positional_encoding=enc):
+                config = TransformerConfig(
+                    vocab_size=100,
+                    block_size=32,
+                    d_model=64,
+                    n_layers=2,
+                    n_heads=4,
+                    d_ff=128,
+                    positional_encoding=enc,
+                )
+                model = Transformer(config)
+                x = torch.randint(0, 100, (2, 8))
+                out = model(x)
+                self.assertEqual(out.shape, (2, 8, 100))
+
+    def test_configurable_activation_functions(self):
+        activations = ["relu", "gelu", "swiglu"]
+        for act in activations:
+            with self.subTest(activation=act):
+                config = TransformerConfig(
+                    vocab_size=100,
+                    block_size=32,
+                    d_model=64,
+                    n_layers=2,
+                    n_heads=4,
+                    d_ff=128,
+                    activation=act,
+                )
+                model = Transformer(config)
+                x = torch.randint(0, 100, (2, 8))
+                out = model(x)
+                self.assertEqual(out.shape, (2, 8, 100))
+
+    def test_transformer_block_activations(self):
+        x = torch.randn(2, 8, 64)
+        for act in ["relu", "gelu", "swiglu", GELU()]:
+            block = TransformerBlock(d_model=64, n_heads=4, d_ff=128, activation=act)
+            out = block(x)
+            self.assertEqual(out.shape, (2, 8, 64))
 
 
 if __name__ == "__main__":

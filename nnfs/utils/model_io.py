@@ -4,20 +4,19 @@ from typing import Union
 import torch
 import yaml
 
-from nnfs.models import *
+from nnfs.models import GPT1, GPT2, PaLM, Transformer, GPT1Config, GPT2Config, PaLMConfig, TransformerConfig
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 
 Tokenizer = Union[CharTokenizer]
-Model = Union[GPT1, GPT2, PaLM, VaswaniDecoderOnly]
-Config = Union[GPT1Config, GPT2Config, PaLMConfig, VaswaniDecoderOnlyConfig]
+Model = Union[GPT1, GPT2, PaLM, Transformer]
+Config = Union[GPT1Config, GPT2Config, PaLMConfig, TransformerConfig]
 
 MODEL_REGISTRY = {
     "gpt1": (GPT1, GPT1Config),
     "gpt2": (GPT2, GPT2Config),
     "palm": (PaLM, PaLMConfig),
-    "vaswani_decoder_only": (VaswaniDecoderOnly, VaswaniDecoderOnlyConfig),
+    "transformer": (Transformer, TransformerConfig),
 }
-
 
 
 def build_model(config_file_path: str):
