@@ -10,15 +10,14 @@ from nnfs.utils.text_generation import generate
 
 class TestLlama1Components(unittest.TestCase):
     def test_llama1_config_defaults(self):
-        config = Llama1Config(d_model=512)
-        self.assertEqual(config.vocab_size, 32000)
-        self.assertEqual(config.block_size, 512)
-        self.assertEqual(config.d_model, 512)
-        self.assertEqual(config.n_layers, 6)
-        self.assertEqual(config.n_heads, 8)
-        # 2/3 * 4 * 512 = 1365.33 -> rounded up to multiple of 256 is 1536
-        self.assertEqual(config.d_ff, 1536)
-        self.assertEqual(config.dropout, 0.0)
+        config = Llama1Config()
+        self.assertEqual(config.vocab_size, 256)
+        self.assertEqual(config.block_size, 1024)
+        self.assertEqual(config.d_model, 256)
+        self.assertEqual(config.n_layers, 4)
+        self.assertEqual(config.n_heads, 4)
+        self.assertEqual(config.d_ff, 1024)
+        self.assertEqual(config.dropout, 0.1)
 
     def test_llama1_transformer_block(self):
         block = Llama1TransformerBlock(d_model=64, n_heads=4, d_ff=128, dropout=0.0)

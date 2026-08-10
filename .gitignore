@@ -222,3 +222,4 @@ checkpoints/*
 wandb/*
 Rough.ipynb
 run.sh
+.agents/*

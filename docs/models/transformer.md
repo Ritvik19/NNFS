@@ -4,99 +4,128 @@ Comprehensive documentation of the **Transformer** architecture implemented in `
 
 ---
 
-## 📌 Architectural Overview
+## 💡 Overview
 
-The **Transformer** in `NNFS` is a modular, autoregressive decoder model based on foundational principles from *\"Attention Is All You Need\"* ([Vaswani et al., 2017](https://arxiv.org/abs/1706.03762)) and extended with support for configurable positional encodings and activation functions.
+The **Transformer** in `NNFS` is a modular, autoregressive decoder language model based on foundational principles from *"Attention Is All You Need"* ([Vaswani et al.](https://arxiv.org/abs/1706.03762)). It leverages scaled dot-product self-attention and position-wise feed-forward networks, extended with configurable positional encodings, activation functions, and normalization options.
 
-In `NNFS`, `Transformer` is built ground-up with custom primitives, enabling:
-- **Configurable Positional Encodings**: `sinusoidal` (Vaswani et al.), `learned` (GPT-1/2), `alibi` (Press et al.), `rope` (Rotary Position Embeddings), or `none`.
-- **Configurable Activation Functions**: `relu`, `gelu`, or `swiglu`.
-- **Post-LN / Pre-LN Options**: Post-Layer Normalization by default, with flexible Pre-LN support via `norm_first=True`.
-- **Tied Output Embeddings**: Weight tying between input token embeddings and output projection layer (`lm_head`).
+In `NNFS`, `Transformer` is implemented with clean, modular primitives supporting both **Post-Layer Normalization (Post-LN)** (default) and **Pre-Layer Normalization (Pre-LN)**.
+
+### Key Architectural Characteristics
+- **Configurable Positional Encodings**: Supports `sinusoidal` (Vaswani et al.), `learned` (GPT-1/2), `alibi` (Press et al.), `rope` (Rotary Position Embeddings), or `none`.
+- **Configurable Activation Functions**: Supports `relu`, `gelu`, or `swiglu`.
+- **Flexible Layer Normalization Placement**: Post-Layer Normalization by default (`norm_first=False`), with optional Pre-Layer Normalization (`norm_first=True`).
+- **Tied Embedding Weights**: Output classification head (`TiedLinear`) shares weights with the token embedding matrix (`Embedding`).
+- **Causal Masking**: Upper-triangular mask ensures tokens attend only to current and preceding positions.
+
+---
+
+## 🏗️ High-Level Architecture
+
+The flow below details how input token sequences are transformed into output vocabulary logits in the Transformer, with tensor dimensions using the baseline config (`vocab_size=256`, `d_model=256`, `block_size=1024`, `n_layers=4`).
 
 ```mermaid
-graph TD
-    Input["Input Token IDs (B, T)"] --> TokEmb["Token Embedding"]
-    
-    subgraph PosEnc ["1. Positional Encoding Options"]
-        SinPE["Sinusoidal (Scaled sqrt(d_model))"]
-        LearnPE["Learned Absolute Position"]
-        ALiBiPE["ALiBi (Attention Biases)"]
-        RoPEPE["RoPE (Rotary Q/K Embeddings)"]
+flowchart TD
+    subgraph Input ["1. Input Pipeline"]
+        TokenIDs["Input Token Indices<br/>Shape: (B, T)"]
+        TokEmb["Token Embedding<br/>Shape: (B, T, 256)"]
+        SinPE["Sinusoidal PE<br/>Shape: (T, 256)"]
+        SumEmb["TokEmb * sqrt(256) + SinPE + Dropout<br/>Shape: (B, T, 256)"]
+        
+        TokenIDs --> TokEmb
+        TokEmb --> SumEmb
+        SinPE --> SumEmb
     end
-    
-    TokEmb --> SumEmb["Input Representations"]
-    
-    subgraph Blocks ["2. Transformer Backbone (N x TransformerBlock)"]
-        SumEmb --> Block1["Transformer Block 1"]
-        Block1 --> Block2["Transformer Block 2"]
+
+    subgraph Blocks ["2. Transformer Backbone (4 x TransformerBlock)"]
+        SumEmb --> Block1["Transformer Block 1<br/>Shape: (B, T, 256)"]
+        Block1 --> Block2["Transformer Block 2<br/>Shape: (B, T, 256)"]
         Block2 --> Dots["..."]
-        Dots --> BlockN["Transformer Block N"]
+        Dots --> Block4["Transformer Block 4<br/>Shape: (B, T, 256)"]
     end
 
-    subgraph Output ["3. Final Normalization & LM Head"]
-        BlockN --> LN["LayerNorm (Optional Pre-LN final norm)"]
-        LN --> Head["Tied Linear Head"]
-        Head --> Logits["Output Logits (B, T, Vocab)"]
+    subgraph Head ["3. Language Model Head"]
+        Block4 --> LMHead["TiedLinear Head<br/>Shape: (B, T, 256)"]
+        LMHead --> Logits["Output Logits<br/>Shape: (B, T, 256)"]
     end
 ```
 
 ---
 
-## 🧩 Transformer Block (`TransformerBlock`)
+## 🧩 Transformer Block (Post-LN)
 
-Each `TransformerBlock` processes sequence states using two main sub-layers: **Causal Multi-Head Self-Attention** and a **Position-Wise Feed-Forward Network**.
+Each `TransformerBlock` processes the hidden state using two main sub-layers: **Causal Multi-Head Self-Attention** and a **Feed-Forward Expansion Network (MLP)**. By default, residual addition occurs prior to layer normalization (Post-LN).
 
-### Architecture Sub-Layers:
-
-1. **Causal Multi-Head Self-Attention**:
-   - Computes standard multi-head self-attention with causal lower-triangular masking.
-   - Supports optional **ALiBi** biases or **RoPE** rotary position embeddings on query and key vectors.
-
-2. **Position-Wise Feed-Forward Network**:
-   - Supports **ReLU** or **GELU** using `MLP` (`d_model` $\rightarrow$ `d_ff` $\rightarrow$ `d_model`).
-   - Supports **SwiGLU** using `SwiGLUMLP` (`w_gate`, `w_up`, `w_down`).
-
----
-
-## ⚙️ Hyperparameters
-
-| Hyperparameter | Symbol | Default | Description |
-| :--- | :--- | :--- | :--- |
-| **Vocab Size** | $V$ | $32000$ | Vocabulary size |
-| **Block Size** | $T_{\text{max}}$ | $512$ | Maximum sequence context length |
-| **Hidden Dimension** | $d_{\text{model}}$ | $512$ | Token hidden representation dimension |
-| **Number of Layers** | $N$ | $6$ | Stacked `TransformerBlock` layers |
-| **Attention Heads** | $h$ | $8$ | Number of parallel attention heads |
-| **FFN Hidden Dim** | $d_{\text{ff}}$ | $2048$ | Feed-forward intermediate expansion dimension |
-| **Positional Encoding** | - | `"sinusoidal"` | `sinusoidal`, `learned`, `alibi`, `rope`, `none` |
-| **Activation Function** | - | `"relu"` | `relu`, `gelu`, `swiglu` |
-| **Pre-LN Mode** | `norm_first` | `False` | Apply LayerNorm before sub-layers if `True` |
-
----
-
-## 🚀 Usage Example
-
-```python
-import torch
-from nnfs.models import Transformer, TransformerConfig
-
-# Instantiate a Transformer model with RoPE and SwiGLU activations
-config = TransformerConfig(
-    vocab_size=32000,
-    block_size=512,
-    d_model=512,
-    n_layers=6,
-    n_heads=8,
-    d_ff=2048,
-    positional_encoding="rope",
-    activation="swiglu",
-    norm_first=True,
-)
-
-model = Transformer(config)
-
-idx = torch.randint(0, 32000, (2, 64))
-logits = model(idx)
-print(logits.shape) # (2, 64, 32000)
+```mermaid
+flowchart TD
+    In["Block Input x<br/>Shape: (B, T, 256)"] --> Attn["Causal Multi-Head Attention<br/>(4 heads, d_head=64)<br/>Shape: (B, T, 256)"]
+    In --> Add1["Residual Add (+)<br/>Shape: (B, T, 256)"]
+    Attn --> Add1
+    Add1 --> LN1["LayerNorm 1<br/>Shape: (B, T, 256)"]
+    
+    LN1 --> FFN["MLP Expansion (ReLU)<br/>fc1: 256 → 1024, fc2: 1024 → 256<br/>Shape: (B, T, 256)"]
+    LN1 --> Add2["Residual Add (+)<br/>Shape: (B, T, 256)"]
+    FFN --> Add2
+    Add2 --> LN2["LayerNorm 2<br/>Shape: (B, T, 256)"]
+    
+    LN2 --> Out["Block Output x_out<br/>Shape: (B, T, 256)"]
 ```
+
+### Mathematical Formulations
+
+Given input tensor $x \in \mathbb{R}^{B \times T \times d_{\text{model}}}$:
+
+1. **Self-Attention Sub-layer**:
+   $$\text{x}_{\text{attn}} = \text{CausalMultiHeadAttention}(x)$$
+   $$\text{x}_{\text{res1}} = \text{LayerNorm}_1(x + \text{x}_{\text{attn}})$$
+
+2. **Feed-Forward Sub-layer**:
+   $$\text{x}_{\text{ffn}} = \text{MLP}(\text{x}_{\text{res1}})$$
+   $$\text{x}_{\text{out}} = \text{LayerNorm}_2(\text{x}_{\text{res1}} + \text{x}_{\text{ffn}})$$
+
+---
+
+## ⚙️ Component Breakdown
+
+### 1. `CausalMultiHeadAttention`
+Computes scaled dot-product attention over single input tensor projected into Queries ($Q$), Keys ($K$), and Values ($V$):
+$$Q, K, V = \text{Linear}_{d_{\text{model}} \rightarrow 3d_{\text{model}}}(x)$$
+$$\text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{Q K^T}{\sqrt{d_{\text{head}}}} + M\right) V$$
+where $M_{i, j} = 0$ if $i \ge j$ and $-\infty$ otherwise (causal mask). Supports optional ALiBi biases or RoPE encodings.
+
+### 2. `MLP`
+Two-layer feed-forward network with configurable activation:
+$$\text{MLP}(h) = \text{Dropout}\left(\text{Linear}_{d_{\text{ff}} \rightarrow d_{\text{model}}}\left(\text{ReLU}\left(\text{Linear}_{d_{\text{model}} \rightarrow d_{\text{ff}}}(h)\right)\right)\right)$$
+
+### 3. `TiedLinear`
+Reuses token embedding weights $W_{\text{tok}} \in \mathbb{R}^{V \times d_{\text{model}}}$ as transposed weights $W_{\text{head}} = W_{\text{tok}}^T \in \mathbb{R}^{d_{\text{model}} \times V}$ for language modeling output:
+$$\text{Logits} = x \cdot W_{\text{tok}}^T$$
+
+---
+
+## 📊 Parameter & Shape Specifications
+
+### Mini-Transformer Baseline Configurations (NNFS Default)
+
+| Parameter | Symbol | Mini Value |
+|---|---|---|
+| Vocabulary Size | `vocab_size` | 256 |
+| Context Length | `block_size` | 1024 |
+| Hidden Dimension | `d_model` | 256 |
+| Transformer Layers | `n_layers` | 4 |
+| Attention Heads | `n_heads` | 4 |
+| Head Dimension | `d_head` | 64 |
+| Feed-Forward Dim | `d_ff` | 1024 |
+
+### Parameter Breakdown
+
+| Component | Parameters Formula | Count (Mini Config) |
+|---|---|---|
+| Token Embedding (`tok_embed`) | $V \times d_{\text{model}}$ | 65,536 |
+| Positional Embedding (`pos_embed`) | None (Sinusoidal non-trainable) | 0 |
+| **Per Transformer Block ($\times 4$)** | | |
+| - Attention (`qkv` + `out`) | $d_{\text{model}} \times 3d_{\text{model}} + 3d_{\text{model}} + d_{\text{model}}^2 + d_{\text{model}}$ | 263,168 |
+| - LayerNorms (`ln1` + `ln2`) | $2 \times (2 \times d_{\text{model}})$ | 1,024 |
+| - MLP (`fc1` + `fc2`) | $d_{\text{model}} \times d_{\text{ff}} + d_{\text{ff}} + d_{\text{ff}} \times d_{\text{model}} + d_{\text{model}}$ | 525,568 |
+| **Total Block Params ($\times 4$)** | $4 \times 789,760$ | 3,159,040 |
+| Final Head (`lm_head`) | Tied to `tok_embed` (0 new) | 0 |
+| **Total Model Parameters** | | **3,224,576** |

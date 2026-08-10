@@ -9,13 +9,13 @@ from nnfs.modules import Llama1TransformerBlock
 class Llama1Config:
     def __init__(
         self,
-        vocab_size: int = 32000,
-        block_size: int = 512,
-        d_model: int = 512,
-        n_layers: int = 6,
-        n_heads: int = 8,
-        d_ff: int | None = None,
-        dropout: float = 0.0,
+        vocab_size: int = 256,
+        block_size: int = 1024,
+        d_model: int = 256,
+        n_layers: int = 4,
+        n_heads: int = 4,
+        d_ff: int | None = 1024,
+        dropout: float = 0.1,
         eps: float = 1e-5,
     ):
         self.vocab_size = vocab_size
@@ -43,8 +43,10 @@ class Llama1(nn.Module):
     - Bias-free linear layers
     """
 
-    def __init__(self, config: Llama1Config):
+    def __init__(self, config: Llama1Config | None = None):
         super().__init__()
+        if config is None:
+            config = Llama1Config()
         self.config = config
         self.tok_embed = Embedding(config.vocab_size, config.d_model)
         self.drop = Dropout(config.dropout)

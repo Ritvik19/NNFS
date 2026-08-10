@@ -20,16 +20,16 @@ In `NNFS`, GPT-2 implements **Pre-Layer Normalization (Pre-LN)** with an additio
 
 ## 🏗️ High-Level Architecture
 
-The flow below details how token inputs pass through Pre-LN blocks and final layer normalization in GPT-2.
+The flow below details how token inputs pass through Pre-LN blocks and final layer normalization in GPT-2, with tensor dimensions using the baseline config (`vocab_size=256`, `d_model=256`, `block_size=1024`, `n_layers=4`).
 
 ```mermaid
 flowchart TD
     subgraph Input ["1. Input Pipeline"]
-        TokenIDs["Input Token Indices (B, T)"]
-        PosIDs["Position Indices (T)"]
-        TokEmb["Token Embedding (B, T, d_model)"]
-        PosEmb["Positional Embedding (T, d_model)"]
-        SumEmb["Sum + Dropout (B, T, d_model)"]
+        TokenIDs["Input Token Indices<br/>Shape: (B, T)"]
+        PosIDs["Position Indices<br/>Shape: (T)"]
+        TokEmb["Token Embedding<br/>Shape: (B, T, 256)"]
+        PosEmb["Positional Embedding<br/>Shape: (T, 256)"]
+        SumEmb["Sum + Dropout<br/>Shape: (B, T, 256)"]
         
         TokenIDs --> TokEmb
         PosIDs --> PosEmb
@@ -37,17 +37,17 @@ flowchart TD
         PosEmb --> SumEmb
     end
 
-    subgraph Blocks ["2. Transformer Backbone (N x GPT2TransformerBlock)"]
-        SumEmb --> Block1["GPT2 Block 1"]
-        Block1 --> Block2["GPT2 Block 2"]
+    subgraph Blocks ["2. Transformer Backbone (4 x GPT2TransformerBlock)"]
+        SumEmb --> Block1["GPT2 Block 1<br/>Shape: (B, T, 256)"]
+        Block1 --> Block2["GPT2 Block 2<br/>Shape: (B, T, 256)"]
         Block2 --> Dots["..."]
-        Dots --> BlockN["GPT2 Block N"]
+        Dots --> Block4["GPT2 Block 4<br/>Shape: (B, T, 256)"]
     end
 
     subgraph Head ["3. Output Normalization & Head"]
-        BlockN --> LNF["Final LayerNorm ln_f (B, T, d_model)"]
-        LNF --> LMHead["TiedLinear Head (B, T, vocab_size)"]
-        LMHead --> Logits["Output Logits (B, T, vocab_size)"]
+        Block4 --> LNF["Final LayerNorm ln_f<br/>Shape: (B, T, 256)"]
+        LNF --> LMHead["TiedLinear Head<br/>Shape: (B, T, 256)"]
+        LMHead --> Logits["Output Logits<br/>Shape: (B, T, 256)"]
     end
 ```
 
@@ -59,17 +59,17 @@ Each `GPT2TransformerBlock` applies layer normalization **prior** to attention a
 
 ```mermaid
 flowchart TD
-    In["Block Input x"] --> LN1["LayerNorm 1"]
-    LN1 --> Attn["Causal Multi-Head Attention"]
-    In --> Add1["Residual Add (+)"]
+    In["Block Input x<br/>Shape: (B, T, 256)"] --> LN1["LayerNorm 1<br/>Shape: (B, T, 256)"]
+    LN1 --> Attn["Causal Multi-Head Attention<br/>(4 heads, d_head=64)<br/>Shape: (B, T, 256)"]
+    In --> Add1["Residual Add (+)<br/>Shape: (B, T, 256)"]
     Attn --> Add1
     
-    Add1 --> LN2["LayerNorm 2"]
-    LN2 --> FFN["MLP Expansion (GELU)"]
-    Add1 --> Add2["Residual Add (+)"]
+    Add1 --> LN2["LayerNorm 2<br/>Shape: (B, T, 256)"]
+    LN2 --> FFN["MLP Expansion (GELU)<br/>fc1: 256 → 1024, fc2: 1024 → 256<br/>Shape: (B, T, 256)"]
+    Add1 --> Add2["Residual Add (+)<br/>Shape: (B, T, 256)"]
     FFN --> Add2
     
-    Add2 --> Out["Block Output x_out"]
+    Add2 --> Out["Block Output x_out<br/>Shape: (B, T, 256)"]
 ```
 
 ### Mathematical Formulations

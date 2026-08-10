@@ -20,12 +20,12 @@ from nnfs.modules import TransformerBlock
 class TransformerConfig:
     def __init__(
         self,
-        vocab_size: int = 32000,
-        block_size: int = 512,
-        d_model: int = 512,
-        n_layers: int = 6,
-        n_heads: int = 8,
-        d_ff: int = 2048,
+        vocab_size: int = 256,
+        block_size: int = 1024,
+        d_model: int = 256,
+        n_layers: int = 4,
+        n_heads: int = 4,
+        d_ff: int = 1024,
         dropout: float = 0.1,
         norm_first: bool = False,
         positional_encoding: str = "sinusoidal",
@@ -48,8 +48,10 @@ class TransformerConfig:
 
 
 class Transformer(nn.Module):
-    def __init__(self, config: TransformerConfig):
+    def __init__(self, config: TransformerConfig | None = None):
         super().__init__()
+        if config is None:
+            config = TransformerConfig()
         self.config = config
         self.tok_embed = Embedding(config.vocab_size, config.d_model)
 

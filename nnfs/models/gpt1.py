@@ -8,12 +8,12 @@ from nnfs.modules import GPT1TransformerBlock
 class GPT1Config:
     def __init__(
         self,
-        vocab_size: int,
-        block_size: int,
-        d_model: int,
-        n_layers: int,
-        n_heads: int,
-        d_ff: int,
+        vocab_size: int = 256,
+        block_size: int = 1024,
+        d_model: int = 256,
+        n_layers: int = 4,
+        n_heads: int = 4,
+        d_ff: int = 1024,
         dropout: float = 0.1,
     ):
         self.vocab_size = vocab_size
@@ -26,8 +26,10 @@ class GPT1Config:
 
 
 class GPT1(nn.Module):
-    def __init__(self, config: GPT1Config):
+    def __init__(self, config: GPT1Config | None = None):
         super().__init__()
+        if config is None:
+            config = GPT1Config()
         self.config = config
         self.tok_embed = Embedding(config.vocab_size, config.d_model)
         self.pos_embed = Embedding(config.block_size, config.d_model)
