@@ -10,6 +10,7 @@ from nnfs.layers import (
     Embedding,
     LayerNorm,
     Linear,
+    RMSNorm,
     SinusoidalPositionalEncoding,
     TiedLinear,
 )
@@ -29,6 +30,8 @@ class TransformerConfig:
         norm_first: bool = False,
         positional_encoding: str = "sinusoidal",
         activation: str = "relu",
+        norm_type: str = "layernorm",
+        bias: bool = True,
     ):
         self.vocab_size = vocab_size
         self.block_size = block_size
@@ -40,6 +43,8 @@ class TransformerConfig:
         self.norm_first = norm_first
         self.positional_encoding = positional_encoding.lower()
         self.activation = activation.lower()
+        self.norm_type = norm_type.lower()
+        self.bias = bias
 
 
 class Transformer(nn.Module):
@@ -73,11 +78,21 @@ class Transformer(nn.Module):
                     activation=config.activation,
                     use_rope=use_rope,
                     max_position_embeddings=config.block_size,
+                    norm_type=config.norm_type,
+                    bias=config.bias,
                 )
                 for _ in range(config.n_layers)
             ]
         )
-        self.ln_f = LayerNorm(config.d_model) if config.norm_first else None
+        if config.norm_first:
+            if config.norm_type == "layernorm":
+                self.ln_f = LayerNorm(config.d_model)
+            elif config.norm_type == "rmsnorm":
+                self.ln_f = RMSNorm(config.d_model)
+            else:
+                raise ValueError(f"Unsupported norm_type: {config.norm_type}")
+        else:
+            self.ln_f = None
         self.lm_head = TiedLinear(self.tok_embed, bias=False)
         self.apply(self._init_weights)
 

@@ -16,6 +16,7 @@ class CausalMultiHeadAttention(nn.Module):
         dropout: float = 0.1,
         use_rope: bool = False,
         max_position_embeddings: int = 2048,
+        bias: bool = True,
     ):
         super().__init__()
         assert d_model % n_heads == 0, "d_model must be divisible by n_heads"
@@ -30,8 +31,8 @@ class CausalMultiHeadAttention(nn.Module):
                 self.d_head, max_position_embeddings=max_position_embeddings
             )
 
-        self.qkv = Linear(d_model, 3 * d_model)
-        self.out = Linear(d_model, d_model)
+        self.qkv = Linear(d_model, 3 * d_model, bias=bias)
+        self.out = Linear(d_model, d_model, bias=bias)
         self.attn_dropout = Dropout(dropout)
         self.resid_dropout = Dropout(dropout)
 

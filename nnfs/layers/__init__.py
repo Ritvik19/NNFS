@@ -1,6 +1,7 @@
 from .embedding import Embedding
 from .linear import Linear
 from .layer_norm import LayerNorm
+from .rms_norm import RMSNorm
 from .dropout import Dropout
 from .causal_multi_head_attention import CausalMultiHeadAttention
 from .mlp import MLP
@@ -15,6 +16,7 @@ __all__ = [
     "Embedding",
     "Linear",
     "LayerNorm",
+    "RMSNorm",
     "Dropout",
     "CausalMultiHeadAttention",
     "MLP",

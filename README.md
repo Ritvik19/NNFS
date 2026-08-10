@@ -42,10 +42,12 @@ nnfs/
 - **GPT-1**: Post-layer-normalization decoder-only transformer with learned positional embeddings and tied weight output head.
 - **GPT-2**: Pre-layer-normalization decoder-only transformer with final layer norm prior to the tied projection head.
 - **PaLM**: Parallel decoder-only transformer with Multi-Query Attention (MQA), SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free kernels.
-- **Transformer**: Modular decoder-only transformer with configurable positional encodings (sinusoidal, learned, ALiBi, RoPE, none), configurable activation functions (ReLU, GELU, SwiGLU), and post-LN / pre-LN options.
+- **LLaMA 1**: Pre-RMSNorm decoder-only transformer with SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free projections.
+- **Transformer**: Modular decoder-only transformer with configurable positional encodings (sinusoidal, learned, ALiBi, RoPE, none), configurable activation functions (ReLU, GELU, SwiGLU), configurable normalization (LayerNorm, RMSNorm), and post-LN / pre-LN options.
 
 ### 📐 Layers & Modules ([Overview](./docs/layers/README.md))
 
+- **[`RMSNorm`](./docs/layers/rms_norm.md)**: Root Mean Square Layer Normalization from Zhang & Sennrich (2019).
 - **[`SinusoidalPositionalEncoding`](./docs/layers/sinusoidal_positional_encoding.md)**: Fixed sine/cosine positional encodings from Vaswani et al. (2017).
 - **[`MultiQueryAttention`](./docs/layers/multi_query_attention.md)**: Multi-Query Attention with single shared Key/Value head and RoPE.
 - **[`SwiGLUMLP`](./docs/layers/swiglu_mlp.md)**: Feed-forward expansion network with SwiGLU gating activation.
@@ -77,9 +79,11 @@ nnfs/
 | Transformer - Learned PE | -                                            | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/o4jjrvkx?nw=nwuserritvik19) | 0.5911     | 0.52374   |
 | Transformer - ALiBi      | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/gsk5gty0?nw=nwuserritvik19) | 0.51397    | 0.46871   |
 | Transformer - RoPE       | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/stfws7au?nw=nwuserritvik19) | 0.50446    | 0.47498   |
+| Transformer - RMSNorm    | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/hcfuzjx1?nw=nwuserritvik19) | -          | -         |
 | GPT1                     | [Architecture](./docs/models/gpt1.md)        | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/fhjgffh9?nw=nwuserritvik19) | 0.63432    | 0.51363   |
 | GPT2                     | [Architecture](./docs/models/gpt2.md)        | 3,487,232    | [link](https://wandb.ai/ritvik19/nnfs/runs/rdr6rk7j?nw=nwuserritvik19) | 0.56123    | 0.47952   |
 | PaLM                     | [Architecture](./docs/models/palm.md)        | 3,869,184    | [Link](https://wandb.ai/ritvik19/nnfs/runs/ojgu35k6?nw=nwuserritvik19) | 0.42648    | 0.42843   |
+| Llama 1                  | [Architecture](./docs/models/llama1.md)      | 4,262,144    | [Link](https://wandb.ai/ritvik19/nnfs/runs/dkzq9y5e?nw=nwuserritvik19) | 0.40327    | 0.37973   |
 
 ---
 

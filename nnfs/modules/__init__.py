@@ -2,10 +2,12 @@ from .gpt1_transformer_block import GPT1TransformerBlock
 from .gpt2_transformer_block import GPT2TransformerBlock
 from .palm_transformer_block import PaLMTransformerBlock
 from .transformer_block import TransformerBlock
+from .llama1_transformer_block import Llama1TransformerBlock
 
 __all__ = [
     "GPT1TransformerBlock",
     "GPT2TransformerBlock",
     "PaLMTransformerBlock",
     "TransformerBlock",
+    "Llama1TransformerBlock",
 ]

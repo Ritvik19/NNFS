@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from nnfs.activations import GELU, ReLU, SwiGLU
-from nnfs.layers import CausalMultiHeadAttention, LayerNorm, MLP, SwiGLUMLP
+from nnfs.layers import CausalMultiHeadAttention, LayerNorm, MLP, RMSNorm, SwiGLUMLP
 
 
 class TransformerBlock(nn.Module):
@@ -16,6 +16,8 @@ class TransformerBlock(nn.Module):
         activation: str | nn.Module = "relu",
         use_rope: bool = False,
         max_position_embeddings: int = 2048,
+        norm_type: str = "layernorm",
+        bias: bool = True,
     ):
         super().__init__()
         self.norm_first = norm_first
@@ -25,6 +27,7 @@ class TransformerBlock(nn.Module):
             dropout=dropout,
             use_rope=use_rope,
             max_position_embeddings=max_position_embeddings,
+            bias=bias,
         )
 
         if isinstance(activation, str):
@@ -34,18 +37,25 @@ class TransformerBlock(nn.Module):
             elif act_str == "gelu":
                 self.ffn = MLP(d_model, d_ff, GELU(), dropout)
             elif act_str == "swiglu":
-                self.ffn = SwiGLUMLP(d_model, d_ff, dropout=dropout)
+                self.ffn = SwiGLUMLP(d_model, d_ff, dropout=dropout, bias=bias)
             else:
                 raise ValueError(f"Unsupported activation function: {activation}")
         elif isinstance(activation, (SwiGLU, SwiGLUMLP)):
-            self.ffn = SwiGLUMLP(d_model, d_ff, dropout=dropout)
+            self.ffn = SwiGLUMLP(d_model, d_ff, dropout=dropout, bias=bias)
         elif isinstance(activation, nn.Module):
             self.ffn = MLP(d_model, d_ff, activation, dropout)
         else:
             raise ValueError(f"Invalid activation type: {type(activation)}")
 
-        self.ln1 = LayerNorm(d_model)
-        self.ln2 = LayerNorm(d_model)
+        norm_str = norm_type.lower()
+        if norm_str == "layernorm":
+            self.ln1 = LayerNorm(d_model)
+            self.ln2 = LayerNorm(d_model)
+        elif norm_str == "rmsnorm":
+            self.ln1 = RMSNorm(d_model)
+            self.ln2 = RMSNorm(d_model)
+        else:
+            raise ValueError(f"Unsupported norm_type: {norm_type}")
 
     def forward(self, input: torch.Tensor, alibi_bias: torch.Tensor | None = None) -> torch.Tensor:
         if self.norm_first:
