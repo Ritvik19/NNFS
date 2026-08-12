@@ -5,6 +5,7 @@ from .transformer import Transformer, TransformerConfig
 from .llama1 import Llama1, Llama1Config
 from .llama2 import Llama2, Llama2Config
 from .llama3 import Llama3, Llama3Config
+from .mistral import Mistral, MistralConfig
 
 __all__ = [
     "GPT1",
@@ -21,5 +22,7 @@ __all__ = [
     "Llama2Config",
     "Llama3",
     "Llama3Config",
+    "Mistral",
+    "MistralConfig",
 ]
 

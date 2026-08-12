@@ -10,6 +10,7 @@ from nnfs.models import (
     Llama1,
     Llama2,
     Llama3,
+    Mistral,
     PaLM,
     Transformer,
     GPT1Config,
@@ -17,13 +18,14 @@ from nnfs.models import (
     Llama1Config,
     Llama2Config,
     Llama3Config,
+    MistralConfig,
     PaLMConfig,
     TransformerConfig,
 )
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 
 Tokenizer = Union[CharTokenizer]
-Model = Union[GPT1, GPT2, PaLM, Transformer, Llama1, Llama2, Llama3]
+Model = Union[GPT1, GPT2, PaLM, Transformer, Llama1, Llama2, Llama3, Mistral]
 Config = Union[
     GPT1Config,
     GPT2Config,
@@ -32,6 +34,7 @@ Config = Union[
     Llama1Config,
     Llama2Config,
     Llama3Config,
+    MistralConfig,
 ]
 
 MODEL_REGISTRY = {
@@ -42,6 +45,7 @@ MODEL_REGISTRY = {
     "llama1": (Llama1, Llama1Config),
     "llama2": (Llama2, Llama2Config),
     "llama3": (Llama3, Llama3Config),
+    "mistral": (Mistral, MistralConfig),
 }
 
 

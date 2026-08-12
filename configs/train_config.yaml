@@ -3,8 +3,8 @@ epochs: 1
 learning_rate: 0.0001
 max_vocab_size: 192
 data_path: "roneneldan/TinyStories"
-save_dir: "checkpoints/transformer_gqa"
+save_dir: "checkpoints/mistral_interleaved"
 log_every_steps: 1
 wandb: true
 wandb_project: "nnfs"
-wandb_run_name: transformer_gqa_tinystories
+wandb_run_name: mistral_interleaved_tinystories

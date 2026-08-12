@@ -5,6 +5,7 @@ from .transformer_block import TransformerBlock
 from .llama1_transformer_block import Llama1TransformerBlock
 from .llama2_transformer_block import Llama2TransformerBlock
 from .llama3_transformer_block import Llama3TransformerBlock
+from .mistral_transformer_block import MistralTransformerBlock
 
 __all__ = [
     "GPT1TransformerBlock",
@@ -14,5 +15,6 @@ __all__ = [
     "Llama1TransformerBlock",
     "Llama2TransformerBlock",
     "Llama3TransformerBlock",
+    "MistralTransformerBlock",
 ]
 

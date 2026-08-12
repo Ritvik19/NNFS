@@ -30,6 +30,7 @@ class GroupedQueryAttention(nn.Module):
         rope_theta: float = 10000.0,
         rope_scaling: dict | None = None,
         bias: bool = False,
+        sliding_window: int | None = None,
     ):
         super().__init__()
         if n_kv_heads is None:
@@ -45,6 +46,7 @@ class GroupedQueryAttention(nn.Module):
         self.d_head = d_model // n_heads
         self.attn_scale = 1.0 / math.sqrt(self.d_head)
         self.use_rope = use_rope
+        self.sliding_window = sliding_window
 
         self.q_proj = Linear(d_model, d_model, bias=bias)
         self.k_proj = Linear(d_model, n_kv_heads * self.d_head, bias=bias)
@@ -87,7 +89,12 @@ class GroupedQueryAttention(nn.Module):
         if alibi_bias is not None:
             scores = scores + alibi_bias
 
-        causal_mask = torch.tril(torch.ones(T, T, device=input.device, dtype=torch.bool))
+        if self.sliding_window is not None:
+            row_idx = torch.arange(T, device=input.device).unsqueeze(1)
+            col_idx = torch.arange(T, device=input.device).unsqueeze(0)
+            causal_mask = (row_idx >= col_idx) & ((row_idx - col_idx) < self.sliding_window)
+        else:
+            causal_mask = torch.tril(torch.ones(T, T, device=input.device, dtype=torch.bool))
         scores = scores.masked_fill(~causal_mask, float("-inf"))
 
         att = torch.softmax(scores, dim=-1)
