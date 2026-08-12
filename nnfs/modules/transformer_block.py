@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from nnfs.activations import GELU, ReLU, SwiGLU
-from nnfs.layers import CausalMultiHeadAttention, LayerNorm, MLP, RMSNorm, SwiGLUMLP
+from nnfs.layers import CausalMultiHeadAttention, GroupedQueryAttention, LayerNorm, MLP, RMSNorm, SwiGLUMLP
 
 
 class TransformerBlock(nn.Module):
@@ -11,6 +11,8 @@ class TransformerBlock(nn.Module):
         d_model: int,
         n_heads: int,
         d_ff: int,
+        n_kv_heads: int | None = None,
+        attn_type: str = "mha",
         dropout: float = 0.1,
         norm_first: bool = False,
         activation: str | nn.Module = "relu",
@@ -21,14 +23,34 @@ class TransformerBlock(nn.Module):
     ):
         super().__init__()
         self.norm_first = norm_first
-        self.attn = CausalMultiHeadAttention(
-            d_model,
-            n_heads,
-            dropout=dropout,
-            use_rope=use_rope,
-            max_position_embeddings=max_position_embeddings,
-            bias=bias,
-        )
+        attn_type_str = attn_type.lower() if isinstance(attn_type, str) else "mha"
+        if n_kv_heads is None:
+            if attn_type_str == "mqa":
+                n_kv_heads = 1
+            elif attn_type_str == "gqa":
+                n_kv_heads = max(1, n_heads // 2)
+            else:
+                n_kv_heads = n_heads
+
+        if attn_type_str == "mha" and n_kv_heads == n_heads:
+            self.attn = CausalMultiHeadAttention(
+                d_model,
+                n_heads,
+                dropout=dropout,
+                use_rope=use_rope,
+                max_position_embeddings=max_position_embeddings,
+                bias=bias,
+            )
+        else:
+            self.attn = GroupedQueryAttention(
+                d_model=d_model,
+                n_heads=n_heads,
+                n_kv_heads=n_kv_heads,
+                dropout=dropout,
+                use_rope=use_rope,
+                max_position_embeddings=max_position_embeddings,
+                bias=bias,
+            )
 
         if isinstance(activation, str):
             act_str = activation.lower()
@@ -37,11 +59,11 @@ class TransformerBlock(nn.Module):
             elif act_str == "gelu":
                 self.ffn = MLP(d_model, d_ff, GELU(), dropout)
             elif act_str == "swiglu":
-                self.ffn = SwiGLUMLP(d_model, d_ff, dropout=dropout, bias=bias)
+                self.ffn = SwiGLUMLP(d_model, d_ff, dropout=dropout, bias=False)
             else:
                 raise ValueError(f"Unsupported activation function: {activation}")
         elif isinstance(activation, (SwiGLU, SwiGLUMLP)):
-            self.ffn = SwiGLUMLP(d_model, d_ff, dropout=dropout, bias=bias)
+            self.ffn = SwiGLUMLP(d_model, d_ff, dropout=dropout, bias=False)
         elif isinstance(activation, nn.Module):
             self.ffn = MLP(d_model, d_ff, activation, dropout)
         else:

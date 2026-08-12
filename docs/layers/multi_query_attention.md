@@ -71,6 +71,7 @@ class MultiQueryAttention(nn.Module):
         d_model: int,
         n_heads: int,
         dropout: float = 0.1,
+        use_rope: bool = True,
         bias: bool = False,
         max_position_embeddings: int = 2048,
     ):
@@ -80,17 +81,19 @@ class MultiQueryAttention(nn.Module):
         self.n_heads = n_heads
         self.d_head = d_model // n_heads
         self.attn_scale = 1.0 / math.sqrt(self.d_head)
+        self.use_rope = use_rope
 
         self.q_proj = Linear(d_model, d_model, bias=bias)
         self.k_proj = Linear(d_model, self.d_head, bias=bias)
         self.v_proj = Linear(d_model, self.d_head, bias=bias)
         self.out_proj = Linear(d_model, d_model, bias=bias)
 
-        self.rotary_emb = RotaryEmbedding(self.d_head, max_position_embeddings=max_position_embeddings)
+        if self.use_rope:
+            self.rotary_emb = RotaryEmbedding(self.d_head, max_position_embeddings=max_position_embeddings)
         self.attn_dropout = Dropout(dropout)
         self.resid_dropout = Dropout(dropout)
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, alibi_bias: torch.Tensor | None = None) -> torch.Tensor:
         B, T, C = input.shape
 
         q = self.q_proj(input)  # (B, T, d_model)
@@ -101,10 +104,14 @@ class MultiQueryAttention(nn.Module):
         k = k.view(B, T, 1, self.d_head).transpose(1, 2)
         v = v.view(B, T, 1, self.d_head).transpose(1, 2)
 
-        cos, sin = self.rotary_emb(T, device=input.device)
-        q, k = apply_rotary_pos_emb(q, k, cos, sin)
+        if self.use_rope:
+            cos, sin = self.rotary_emb(T, device=input.device)
+            q, k = apply_rotary_pos_emb(q, k, cos, sin)
 
         att = (q @ k.transpose(-2, -1)) * self.attn_scale
+        if alibi_bias is not None:
+            att = att + alibi_bias
+
         causal_mask = torch.tril(torch.ones(T, T, device=input.device, dtype=torch.bool))
         att = att.masked_fill(~causal_mask, float("-inf"))
         att = torch.softmax(att, dim=-1)

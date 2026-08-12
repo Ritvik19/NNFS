@@ -76,10 +76,11 @@ class GPT1(nn.Module):
             map_location=map_location,
             weights_only=False,
         )
-        self.load_state_dict(
-            torch.load(
-                load_path + "/model.pth",
-                map_location=map_location,
-                weights_only=True,
-            )
+        state_dict = torch.load(
+            load_path + "/model.pth",
+            map_location=map_location,
+            weights_only=True,
         )
+        if self.lm_head.bias is None and "lm_head.bias" in state_dict:
+            del state_dict["lm_head.bias"]
+        self.load_state_dict(state_dict)

@@ -8,19 +8,21 @@ from nnfs.models import (
     GPT1,
     GPT2,
     Llama1,
+    Llama2,
     PaLM,
     Transformer,
     GPT1Config,
     GPT2Config,
     Llama1Config,
+    Llama2Config,
     PaLMConfig,
     TransformerConfig,
 )
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 
 Tokenizer = Union[CharTokenizer]
-Model = Union[GPT1, GPT2, PaLM, Transformer, Llama1]
-Config = Union[GPT1Config, GPT2Config, PaLMConfig, TransformerConfig, Llama1Config]
+Model = Union[GPT1, GPT2, PaLM, Transformer, Llama1, Llama2]
+Config = Union[GPT1Config, GPT2Config, PaLMConfig, TransformerConfig, Llama1Config, Llama2Config]
 
 MODEL_REGISTRY = {
     "gpt1": (GPT1, GPT1Config),
@@ -28,6 +30,7 @@ MODEL_REGISTRY = {
     "palm": (PaLM, PaLMConfig),
     "transformer": (Transformer, TransformerConfig),
     "llama1": (Llama1, Llama1Config),
+    "llama2": (Llama2, Llama2Config),
 }
 
 

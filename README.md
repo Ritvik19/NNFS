@@ -79,11 +79,14 @@ nnfs/
 | Transformer - Learned PE | -                                            | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/o4jjrvkx?nw=nwuserritvik19) | 0.5911     | 0.52374   |
 | Transformer - ALiBi      | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/gsk5gty0?nw=nwuserritvik19) | 0.51397    | 0.46871   |
 | Transformer - RoPE       | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/stfws7au?nw=nwuserritvik19) | 0.50446    | 0.47498   |
-| Transformer - RMSNorm    | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/hcfuzjx1?nw=nwuserritvik19) | -          | -         |
+| Transformer - RMSNorm    | -                                            | 3,224,576    | [link](https://wandb.ai/ritvik19/nnfs/runs/hcfuzjx1?nw=nwuserritvik19) | 0.65418    | 0.53732   |
+| Transformer - MQA        | -                                            | 2,961,408    | [link](https://wandb.ai/ritvik19/nnfs/runs/dl4bi38t?nw=nwuserritvik19) | 0.69114    | 0.57979   |
+| Transformer - GQA        | -                                            | 2,961,408    | [link](https://wandb.ai/ritvik19/nnfs/runs/chbx0ofp?nw=nwuserritvik19) | 0.56067    | 0.51578   |
 | GPT1                     | [Architecture](./docs/models/gpt1.md)        | 3,486,720    | [link](https://wandb.ai/ritvik19/nnfs/runs/fhjgffh9?nw=nwuserritvik19) | 0.63432    | 0.51363   |
 | GPT2                     | [Architecture](./docs/models/gpt2.md)        | 3,487,232    | [link](https://wandb.ai/ritvik19/nnfs/runs/rdr6rk7j?nw=nwuserritvik19) | 0.56123    | 0.47952   |
 | PaLM                     | [Architecture](./docs/models/palm.md)        | 3,869,184    | [Link](https://wandb.ai/ritvik19/nnfs/runs/ojgu35k6?nw=nwuserritvik19) | 0.42648    | 0.42843   |
 | Llama 1                  | [Architecture](./docs/models/llama1.md)      | 4,262,144    | [Link](https://wandb.ai/ritvik19/nnfs/runs/dkzq9y5e?nw=nwuserritvik19) | 0.40327    | 0.37973   |
+| Llama 2                  | [Architecture](./docs/models/llama2.md)      | 4,000,000    | [Link](https://wandb.ai/ritvik19/nnfs/runs/tkw5quka?nw=nwuserritvik19) | 0.47521    | 0.38264   |
 
 ---
 

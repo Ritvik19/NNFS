@@ -3,6 +3,7 @@ from .gpt2 import GPT2, GPT2Config
 from .palm import PaLM, PaLMConfig
 from .transformer import Transformer, TransformerConfig
 from .llama1 import Llama1, Llama1Config
+from .llama2 import Llama2, Llama2Config
 
 __all__ = [
     "GPT1",
@@ -15,4 +16,6 @@ __all__ = [
     "TransformerConfig",
     "Llama1",
     "Llama1Config",
+    "Llama2",
+    "Llama2Config",
 ]

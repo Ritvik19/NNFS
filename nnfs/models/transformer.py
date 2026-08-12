@@ -25,6 +25,8 @@ class TransformerConfig:
         d_model: int = 256,
         n_layers: int = 4,
         n_heads: int = 4,
+        n_kv_heads: int | None = None,
+        attn_type: str = "mha",
         d_ff: int = 1024,
         dropout: float = 0.1,
         norm_first: bool = False,
@@ -38,6 +40,25 @@ class TransformerConfig:
         self.d_model = d_model
         self.n_layers = n_layers
         self.n_heads = n_heads
+        self.attn_type = attn_type.lower()
+        if n_kv_heads is not None:
+            self.n_kv_heads = n_kv_heads
+            if n_kv_heads == 1:
+                self.attn_type = "mqa"
+            elif n_kv_heads < n_heads:
+                self.attn_type = "gqa"
+            else:
+                self.attn_type = "mha"
+        else:
+            if self.attn_type == "mha":
+                self.n_kv_heads = n_heads
+            elif self.attn_type == "mqa":
+                self.n_kv_heads = 1
+            elif self.attn_type == "gqa":
+                self.n_kv_heads = max(1, n_heads // 2)
+            else:
+                raise ValueError(f"Unsupported attn_type: {attn_type}. Choose from 'mha', 'mqa', 'gqa'.")
+
         self.d_ff = d_ff
         self.dropout = dropout
         self.norm_first = norm_first
@@ -75,6 +96,8 @@ class Transformer(nn.Module):
                     d_model=config.d_model,
                     n_heads=config.n_heads,
                     d_ff=config.d_ff,
+                    n_kv_heads=config.n_kv_heads,
+                    attn_type=config.attn_type,
                     dropout=config.dropout,
                     norm_first=config.norm_first,
                     activation=config.activation,

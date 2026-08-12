@@ -28,6 +28,7 @@ flowchart TD
     subgraph Attention ["3. Attention Mechanisms & Position Encodings"]
         CMHA["CausalMultiHeadAttention (GPT-1 / GPT-2)"]
         MQA["MultiQueryAttention (PaLM + RoPE)"]
+        GQA["GroupedQueryAttention (LLaMA 2 + RoPE)"]
         RoPE["RotaryEmbedding (RoPE)"]
         ALiBi["ALiBiPositionalBias (BLOOM)"]
     end
@@ -52,6 +53,7 @@ flowchart TD
 | | `Dropout` | [`dropout.md`](./dropout.md) | $0$ | N/A | Regularization |
 | **Attention** | `CausalMultiHeadAttention` | [`causal_multi_head_attention.md`](./causal_multi_head_attention.md) | $4 d_{\text{model}}^2 + 4 d_{\text{model}}$ | `True` | GPT-1, GPT-2, Transformer |
 | | `MultiQueryAttention` | [`multi_query_attention.md`](./multi_query_attention.md) | $2 d_{\text{model}}^2 + 2(d_{\text{model}} \cdot d_{\text{head}})$ | `False` | PaLM |
+| | `GroupedQueryAttention` | [`grouped_query_attention.md`](./grouped_query_attention.md) | $2 d_{\text{model}}^2 + 2 d_{\text{model}} (n_{\text{kv\_heads}} d_{\text{head}})$ | `False` | LLaMA 2 |
 | | `RotaryEmbedding` | [`rope.md`](./rope.md) | $0$ (Cached frequency tables) | N/A | PaLM, LLaMA Position Encoding |
 | | `ALiBiPositionalBias` | [`alibi.md`](./alibi.md) | $0$ (Cached slope distance matrices) | N/A | BLOOM, Baichuan Positional Bias |
 | **Feed-Forward** | `MLP` | [`mlp.md`](./mlp.md) | $2 d_{\text{model}} d_{\text{ff}} + d_{\text{ff}} + d_{\text{model}}$ | `True` | GPT-1, GPT-2, Transformer |
@@ -74,6 +76,7 @@ flowchart TD
 ### 🔹 Attention & Position Encodings
 - 📘 [**`CausalMultiHeadAttention` Documentation**](./causal_multi_head_attention.md)
 - 📘 [**`MultiQueryAttention` Documentation**](./multi_query_attention.md)
+- 📘 [**`GroupedQueryAttention` Documentation**](./grouped_query_attention.md)
 - 📘 [**`RotaryEmbedding` (RoPE) Documentation**](./rope.md)
 - 📘 [**`ALiBiPositionalBias` Documentation**](./alibi.md)
 

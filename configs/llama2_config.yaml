@@ -1,0 +1,9 @@
+model_name: llama2
+block_size: 1024
+d_model: 256
+n_layers: 4
+n_heads: 4
+n_kv_heads: 2
+d_ff: 1024
+dropout: 0.1
+vocab_size: 256

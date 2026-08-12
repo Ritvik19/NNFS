@@ -4,6 +4,7 @@ from .layer_norm import LayerNorm
 from .rms_norm import RMSNorm
 from .dropout import Dropout
 from .causal_multi_head_attention import CausalMultiHeadAttention
+from .grouped_query_attention import GroupedQueryAttention
 from .mlp import MLP
 from .tied_linear import TiedLinear
 from .swiglu_mlp import SwiGLUMLP
@@ -19,6 +20,7 @@ __all__ = [
     "RMSNorm",
     "Dropout",
     "CausalMultiHeadAttention",
+    "GroupedQueryAttention",
     "MLP",
     "TiedLinear",
     "SwiGLUMLP",

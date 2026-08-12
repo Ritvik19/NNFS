@@ -11,6 +11,7 @@ The **Transformer** in `NNFS` is a modular, autoregressive decoder language mode
 In `NNFS`, `Transformer` is implemented with clean, modular primitives supporting both **Post-Layer Normalization (Post-LN)** (default) and **Pre-Layer Normalization (Pre-LN)**.
 
 ### Key Architectural Characteristics
+- **Configurable Attention Mechanisms**: Supports Multi-Head Attention (`mha`), Multi-Query Attention (`mqa`), or Grouped-Query Attention (`gqa`) via `attn_type` and `n_kv_heads`.
 - **Configurable Positional Encodings**: Supports `sinusoidal` (Vaswani et al.), `learned` (GPT-1/2), `alibi` (Press et al.), `rope` (Rotary Position Embeddings), or `none`.
 - **Configurable Activation Functions**: Supports `relu`, `gelu`, or `swiglu`.
 - **Flexible Layer Normalization Placement**: Post-Layer Normalization by default (`norm_first=False`), with optional Pre-Layer Normalization (`norm_first=True`).

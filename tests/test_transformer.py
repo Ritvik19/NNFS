@@ -108,12 +108,19 @@ class TestTransformer(unittest.TestCase):
             torch.testing.assert_close(out_orig, out_loaded)
 
     def test_build_model_integration(self):
-        model = build_model("configs/transformer_config.yaml")
-        self.assertIsInstance(model, Transformer)
+        config_files = [
+            "configs/transformer_config.yaml",
+            "configs/transformer_mqa_config.yaml",
+            "configs/transformer_gqa_config.yaml",
+        ]
+        for cfg_file in config_files:
+            with self.subTest(config_file=cfg_file):
+                model = build_model(cfg_file)
+                self.assertIsInstance(model, Transformer)
 
-        x = torch.randint(0, 256, (2, 10))
-        out = model(x)
-        self.assertEqual(out.shape, (2, 10, 256))
+                x = torch.randint(0, 256, (2, 10))
+                out = model(x)
+                self.assertEqual(out.shape, (2, 10, 256))
 
     def test_autoregressive_generation(self):
         idx = torch.tensor([[1, 2, 3]])
@@ -164,6 +171,29 @@ class TestTransformer(unittest.TestCase):
             block = TransformerBlock(d_model=64, n_heads=4, d_ff=128, activation=act)
             out = block(x)
             self.assertEqual(out.shape, (2, 8, 64))
+
+    def test_configurable_attention_types(self):
+        attn_configs = [
+            ("mha", None),
+            ("mqa", 1),
+            ("gqa", 2),
+        ]
+        for attn_type, n_kv_heads in attn_configs:
+            with self.subTest(attn_type=attn_type):
+                config = TransformerConfig(
+                    vocab_size=100,
+                    block_size=32,
+                    d_model=64,
+                    n_layers=2,
+                    n_heads=4,
+                    n_kv_heads=n_kv_heads,
+                    attn_type=attn_type,
+                    d_ff=128,
+                )
+                model = Transformer(config)
+                x = torch.randint(0, 100, (2, 8))
+                out = model(x)
+                self.assertEqual(out.shape, (2, 8, 100))
 
 
 if __name__ == "__main__":
