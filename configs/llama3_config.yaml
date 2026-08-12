@@ -1,0 +1,16 @@
+model_name: llama3
+block_size: 1024
+d_model: 256
+n_layers: 4
+n_heads: 4
+n_kv_heads: 2
+d_ff: 1024
+dropout: 0.1
+vocab_size: 256
+rope_theta: 500000.0
+rope_scaling:
+  rope_type: llama3
+  factor: 8.0
+  low_freq_factor: 1.0
+  high_freq_factor: 4.0
+  original_max_position_embeddings: 8192

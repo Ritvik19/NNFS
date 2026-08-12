@@ -27,6 +27,8 @@ class GroupedQueryAttention(nn.Module):
         dropout: float = 0.0,
         use_rope: bool = True,
         max_position_embeddings: int = 4096,
+        rope_theta: float = 10000.0,
+        rope_scaling: dict | None = None,
         bias: bool = False,
     ):
         super().__init__()
@@ -51,7 +53,10 @@ class GroupedQueryAttention(nn.Module):
 
         if self.use_rope:
             self.rotary_emb = RotaryEmbedding(
-                self.d_head, max_position_embeddings=max_position_embeddings
+                self.d_head,
+                max_position_embeddings=max_position_embeddings,
+                base=rope_theta,
+                rope_scaling=rope_scaling,
             )
 
         self.attn_dropout = Dropout(dropout)

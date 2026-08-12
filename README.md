@@ -43,6 +43,8 @@ nnfs/
 - **GPT-2**: Pre-layer-normalization decoder-only transformer with final layer norm prior to the tied projection head.
 - **PaLM**: Parallel decoder-only transformer with Multi-Query Attention (MQA), SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free kernels.
 - **LLaMA 1**: Pre-RMSNorm decoder-only transformer with SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free projections.
+- **LLaMA 2**: Pre-RMSNorm decoder-only transformer with Grouped-Query Attention (GQA), SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free projections.
+- **LLaMA 3**: Pre-RMSNorm decoder-only transformer with Grouped-Query Attention (GQA), SwiGLU activations, Llama 3 piecewise frequency-scaled Rotary Position Embeddings ($\theta = 500,000.0$), and tied weight projections.
 - **Transformer**: Modular decoder-only transformer with configurable positional encodings (sinusoidal, learned, ALiBi, RoPE, none), configurable activation functions (ReLU, GELU, SwiGLU), configurable normalization (LayerNorm, RMSNorm), and post-LN / pre-LN options.
 
 ### 📐 Layers & Modules ([Overview](./docs/layers/README.md))
@@ -50,8 +52,9 @@ nnfs/
 - **[`RMSNorm`](./docs/layers/rms_norm.md)**: Root Mean Square Layer Normalization from Zhang & Sennrich (2019).
 - **[`SinusoidalPositionalEncoding`](./docs/layers/sinusoidal_positional_encoding.md)**: Fixed sine/cosine positional encodings from Vaswani et al. (2017).
 - **[`MultiQueryAttention`](./docs/layers/multi_query_attention.md)**: Multi-Query Attention with single shared Key/Value head and RoPE.
+- **[`GroupedQueryAttention`](./docs/layers/grouped_query_attention.md)**: Grouped-Query Attention with configurable KV head groups and RoPE scaling.
 - **[`SwiGLUMLP`](./docs/layers/swiglu_mlp.md)**: Feed-forward expansion network with SwiGLU gating activation.
-- **[`RotaryEmbedding`](./docs/layers/rope.md)**: Rotary position embeddings (RoPE) applied to query and key projections.
+- **[`RotaryEmbedding`](./docs/layers/rope.md)**: Rotary position embeddings (RoPE) applied to query and key projections with optional Llama 3 frequency scaling.
 - **[`CausalMultiHeadAttention`](./docs/layers/causal_multi_head_attention.md)**: Scaled dot-product multi-head causal self-attention with masking.
 - **[`Linear`](./docs/layers/linear.md) & [`TiedLinear`](./docs/layers/tied_linear.md)**: Weight-tied output classification head reusing token embedding weights.
 - **[`LayerNorm`](./docs/layers/layer_norm.md)**: Standard layer normalization with learnable gain and bias.
@@ -87,6 +90,8 @@ nnfs/
 | PaLM                     | [Architecture](./docs/models/palm.md)        | 3,869,184    | [Link](https://wandb.ai/ritvik19/nnfs/runs/ojgu35k6?nw=nwuserritvik19) | 0.42648    | 0.42843   |
 | Llama 1                  | [Architecture](./docs/models/llama1.md)      | 4,262,144    | [Link](https://wandb.ai/ritvik19/nnfs/runs/dkzq9y5e?nw=nwuserritvik19) | 0.40327    | 0.37973   |
 | Llama 2                  | [Architecture](./docs/models/llama2.md)      | 4,000,000    | [Link](https://wandb.ai/ritvik19/nnfs/runs/tkw5quka?nw=nwuserritvik19) | 0.47521    | 0.38264   |
+| Llama 3                  | [Architecture](./docs/models/llama3.md)      | 4,000,000    | -                                                                      | -          | -         |
+
 
 ---
 

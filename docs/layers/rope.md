@@ -8,7 +8,9 @@ Documentation for Rotary Position Embeddings (RoPE) implemented in `NNFS`.
 
 **Rotary Position Embedding (RoPE)** ([Su et al., 2021](https://arxiv.org/abs/2104.09864)) injects positional information into self-attention by rotating Query and Key vectors in complex 2D planes according to token sequence index $m$.
 
-RoPE allows relative positional relationships to naturally naturally decay with distance and is used in architectures like **PaLM**, **LLaMA**, and **Mistral**.
+RoPE allows relative positional relationships to naturally decay with distance and is used in architectures like **PaLM**, **LLaMA 1-3**, and **Mistral**.
+
+In LLaMA 3, 3.1, 3.2, and 3.3, RoPE is upgraded with a larger base frequency ($\theta = 500,000.0$) and **Llama 3 Piecewise Frequency Scaling** (`rope_scaling`) to support context lengths up to 128K tokens.
 
 Module Location: [`nnfs/layers/rope.py`](../../nnfs/layers/rope.py)
 
@@ -20,7 +22,14 @@ For sequence index $m$ and 2D vector pair $(x_1, x_2)^T$:
 
 $$R_{\Theta, m}^{(i)} \begin{pmatrix} x_1 \\ x_2 \end{pmatrix} = \begin{pmatrix} \cos m\theta_i & -\sin m\theta_i \\ \sin m\theta_i & \cos m\theta_i \end{pmatrix} \begin{pmatrix} x_1 \\ x_2 \end{pmatrix}$$
 
-where frequency $\theta_i = b^{-2(i-1)/d}$ with base $b = 10000.0$.
+where frequency $\theta_i = b^{-2i/d}$ with base $b = 10000.0$ (LLaMA 1/2) or $b = 500000.0$ (LLaMA 3).
+
+### Llama 3 Piecewise Frequency Scaling
+
+When `rope_scaling` (`rope_type="llama3"`) is enabled, frequencies are adjusted based on wavelength $\lambda_i = \frac{2\pi}{\omega_i}$:
+- **Short Wavelength ($\lambda_i < w_{\text{high}}$)**: Unscaled ($\omega_i' = \omega_i$) to preserve short-range syntax.
+- **Long Wavelength ($\lambda_i > w_{\text{low}}$)**: Fully scaled ($\omega_i' = \omega_i / S$) to fit long context within original phase range.
+- **Medium Wavelength ($w_{\text{high}} \le \lambda_i \le w_{\text{low}}$)**: Smoothly interpolated between $1.0$ and $1/S$.
 
 ### Efficient Vectorized Rotation
 
@@ -32,11 +41,11 @@ $$x_{\text{rope}} = (x \odot \cos) + (\text{rotate\_half}(x) \odot \sin)$$
 ## 💻 Ground-Up Implementation
 
 ```python
+import math
 import torch
 import torch.nn as nn
 
 def rotate_half(x: torch.Tensor) -> torch.Tensor:
-    """Rotates half the hidden dims of the input."""
     x1 = x[..., : x.shape[-1] // 2]
     x2 = x[..., x.shape[-1] // 2 :]
     return torch.cat((-x2, x1), dim=-1)
@@ -49,13 +58,44 @@ def apply_rotary_pos_emb(
     return q_embed, k_embed
 
 class RotaryEmbedding(nn.Module):
-    def __init__(self, dim: int, max_position_embeddings: int = 2048, base: float = 10000.0):
+    def __init__(
+        self,
+        dim: int,
+        max_position_embeddings: int = 2048,
+        base: float = 10000.0,
+        rope_scaling: dict | None = None,
+    ):
         super().__init__()
         self.dim = dim
         self.max_position_embeddings = max_position_embeddings
         self.base = base
+        self.rope_scaling = rope_scaling
 
         inv_freq = 1.0 / (self.base ** (torch.arange(0, self.dim, 2).float() / self.dim))
+
+        if rope_scaling is not None and rope_scaling.get("rope_type") == "llama3":
+            factor = rope_scaling.get("factor", 8.0)
+            low_freq_factor = rope_scaling.get("low_freq_factor", 1.0)
+            high_freq_factor = rope_scaling.get("high_freq_factor", 4.0)
+            orig_max_pos = rope_scaling.get("original_max_position_embeddings", 8192)
+
+            low_freq_w = orig_max_pos / low_freq_factor
+            high_freq_w = orig_max_pos / high_freq_factor
+
+            scaled_inv_freq = []
+            for freq in inv_freq:
+                w = 2.0 * math.pi / freq.item()
+                if w < high_freq_w:
+                    scaled_inv_freq.append(freq.item())
+                elif w > low_freq_w:
+                    scaled_inv_freq.append(freq.item() / factor)
+                else:
+                    smooth = (orig_max_pos / w - high_freq_factor) / (low_freq_factor - high_freq_factor)
+                    scaled_freq = (1.0 - smooth) * (freq.item() / factor) + smooth * freq.item()
+                    scaled_inv_freq.append(scaled_freq)
+
+            inv_freq = torch.tensor(scaled_inv_freq, dtype=torch.float32)
+
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 
         t = torch.arange(self.max_position_embeddings, dtype=torch.float32)
@@ -84,3 +124,4 @@ class RotaryEmbedding(nn.Module):
 | **Key Tensor $k$** | $(B, 1, T, d_{\text{head}})$ or $(B, n_{\text{heads}}, T, d_{\text{head}})$ | Key input tensor |
 | **Cos / Sin Cache** | $(1, 1, T_{\text{max}}, d_{\text{head}})$ | Non-persistent buffer |
 | **Learnable Parameters** | **0** | Calculated purely deterministically |
+

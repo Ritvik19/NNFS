@@ -46,18 +46,18 @@ flowchart TD
 | Category | Primitive Layer | File Link | Key Parameters Formula | Default Bias | Model Usage |
 |---|---|---|---|---|---|
 | **Linear & Lookup** | `Linear` | [`linear.md`](./linear.md) | $d_{\text{in}} \cdot d_{\text{out}} + d_{\text{out}}$ | `True` | General Projections |
-| | `TiedLinear` | [`tied_linear.md`](./tied_linear.md) | $0$ new weights (shares $V \times d_{\text{model}}$) | `True` | GPT-1, GPT-2, PaLM LM Head |
+| | `TiedLinear` | [`tied_linear.md`](./tied_linear.md) | $0$ new weights (shares $V \times d_{\text{model}}$) | `True` | GPT-1, GPT-2, PaLM, LLaMA 1-3 LM Head |
 | | `Embedding` | [`embedding.md`](./embedding.md) | $V \cdot d_{\text{model}}$ | N/A | Token & Positional Embeddings |
 | | `SinusoidalPositionalEncoding` | [`sinusoidal_positional_encoding.md`](./sinusoidal_positional_encoding.md) | $0$ (Fixed buffer) | N/A | Transformer |
 | **Norm & Dropout** | `LayerNorm` | [`layer_norm.md`](./layer_norm.md) | $2 \cdot d_{\text{model}}$ (or $d_{\text{model}}$ if bias=False) | `True` | Pre-LN & Post-LN Transformer Blocks |
 | | `Dropout` | [`dropout.md`](./dropout.md) | $0$ | N/A | Regularization |
 | **Attention** | `CausalMultiHeadAttention` | [`causal_multi_head_attention.md`](./causal_multi_head_attention.md) | $4 d_{\text{model}}^2 + 4 d_{\text{model}}$ | `True` | GPT-1, GPT-2, Transformer |
 | | `MultiQueryAttention` | [`multi_query_attention.md`](./multi_query_attention.md) | $2 d_{\text{model}}^2 + 2(d_{\text{model}} \cdot d_{\text{head}})$ | `False` | PaLM |
-| | `GroupedQueryAttention` | [`grouped_query_attention.md`](./grouped_query_attention.md) | $2 d_{\text{model}}^2 + 2 d_{\text{model}} (n_{\text{kv\_heads}} d_{\text{head}})$ | `False` | LLaMA 2 |
-| | `RotaryEmbedding` | [`rope.md`](./rope.md) | $0$ (Cached frequency tables) | N/A | PaLM, LLaMA Position Encoding |
+| | `GroupedQueryAttention` | [`grouped_query_attention.md`](./grouped_query_attention.md) | $2 d_{\text{model}}^2 + 2 d_{\text{model}} (n_{\text{kv\_heads}} d_{\text{head}})$ | `False` | LLaMA 2, LLaMA 3 |
+| | `RotaryEmbedding` | [`rope.md`](./rope.md) | $0$ (Cached frequency tables) | N/A | PaLM, LLaMA 1-3 Position Encoding |
 | | `ALiBiPositionalBias` | [`alibi.md`](./alibi.md) | $0$ (Cached slope distance matrices) | N/A | BLOOM, Baichuan Positional Bias |
 | **Feed-Forward** | `MLP` | [`mlp.md`](./mlp.md) | $2 d_{\text{model}} d_{\text{ff}} + d_{\text{ff}} + d_{\text{model}}$ | `True` | GPT-1, GPT-2, Transformer |
-| | `SwiGLUMLP` | [`swiglu_mlp.md`](./swiglu_mlp.md) | $3 (d_{\text{model}} \cdot d_{\text{ff}})$ | `False` | PaLM |
+| | `SwiGLUMLP` | [`swiglu_mlp.md`](./swiglu_mlp.md) | $3 (d_{\text{model}} \cdot d_{\text{ff}})$ | `False` | PaLM, LLaMA 1-3 |
 
 ---
 

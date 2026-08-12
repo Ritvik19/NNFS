@@ -6,7 +6,7 @@ Documentation for the `GroupedQueryAttention` (GQA) mechanism implemented in `NN
 
 ## 💡 Overview
 
-`GroupedQueryAttention` implements Grouped-Query Attention with Rotary Position Embeddings (RoPE) and causal autoregressive masking. Introduced by Ainslie et al. (2023) and popularized in **LLaMA 2** (34B and 70B variants), GQA partitions Query heads into groups that share a smaller set of Key and Value heads ($n_{\text{kv\_heads}} < n_{\text{heads}}$).
+`GroupedQueryAttention` implements Grouped-Query Attention with Rotary Position Embeddings (RoPE) and causal autoregressive masking. Introduced by Ainslie et al. (2023) and popularized in **LLaMA 2** and **LLaMA 3**, GQA partitions Query heads into groups that share a smaller set of Key and Value heads ($n_{\text{kv\_heads}} < n_{\text{heads}}$).
 
 This strikes an optimal trade-off between the high performance of **Multi-Head Attention (MHA)** and the memory efficiency of **Multi-Query Attention (MQA)**.
 
@@ -15,7 +15,7 @@ Module Location: [`nnfs/layers/grouped_query_attention.py`](../../nnfs/layers/gr
 ### Supported Topologies
 - **Multi-Head Attention (MHA)**: When $n_{\text{kv\_heads}} = n_{\text{heads}}$ (1:1 ratio). Each Query head has its own Key/Value head.
 - **Multi-Query Attention (MQA)**: When $n_{\text{kv\_heads}} = 1$. All Query heads share 1 Key/Value head (PaLM style).
-- **Grouped-Query Attention (GQA)**: When $1 < n_{\text{kv\_heads}} < n_{\text{heads}}$. $N_{\text{rep}} = n_{\text{heads}} / n_{\text{kv\_heads}}$ Query heads share 1 Key/Value head (LLaMA 2 style).
+- **Grouped-Query Attention (GQA)**: When $1 < n_{\text{kv\_heads}} < n_{\text{heads}}$. $N_{\text{rep}} = n_{\text{heads}} / n_{\text{kv\_heads}}$ Query heads share 1 Key/Value head (LLaMA 2 / LLaMA 3 style).
 
 ---
 
@@ -31,7 +31,7 @@ flowchart TD
     ProjK --> ReshapeK["K (B, n_kv_heads, T, d_head)"]
     ProjV --> ReshapeV["V (B, n_kv_heads, T, d_head)"]
 
-    ReshapeQ --> RoPE["Apply RoPE (Rotary Position Embeddings)"]
+    ReshapeQ --> RoPE["Apply RoPE (Rotary Position Embeddings with optional Llama 3 scaling)"]
     ReshapeK --> RoPE
 
     RoPE --> ExpandKV["Expand K, V (repeat_interleave x N_rep)<br/>K, V -> (B, n_heads, T, d_head)"]
@@ -95,6 +95,8 @@ class GroupedQueryAttention(nn.Module):
         dropout: float = 0.0,
         use_rope: bool = True,
         max_position_embeddings: int = 4096,
+        rope_theta: float = 10000.0,
+        rope_scaling: dict | None = None,
         bias: bool = False,
     ):
         super().__init__()
@@ -119,7 +121,10 @@ class GroupedQueryAttention(nn.Module):
 
         if self.use_rope:
             self.rotary_emb = RotaryEmbedding(
-                self.d_head, max_position_embeddings=max_position_embeddings
+                self.d_head,
+                max_position_embeddings=max_position_embeddings,
+                base=rope_theta,
+                rope_scaling=rope_scaling,
             )
 
         self.attn_dropout = Dropout(dropout)

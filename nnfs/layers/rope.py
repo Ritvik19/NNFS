@@ -1,3 +1,4 @@
+import math
 import torch
 import torch.nn as nn
 
@@ -24,15 +25,46 @@ def apply_rotary_pos_emb(
 
 
 class RotaryEmbedding(nn.Module):
-    """Rotary Position Embedding (RoPE) generator."""
+    """Rotary Position Embedding (RoPE) generator with optional Llama 3 scaling."""
 
-    def __init__(self, dim: int, max_position_embeddings: int = 2048, base: float = 10000.0):
+    def __init__(
+        self,
+        dim: int,
+        max_position_embeddings: int = 2048,
+        base: float = 10000.0,
+        rope_scaling: dict | None = None,
+    ):
         super().__init__()
         self.dim = dim
         self.max_position_embeddings = max_position_embeddings
         self.base = base
+        self.rope_scaling = rope_scaling
 
         inv_freq = 1.0 / (self.base ** (torch.arange(0, self.dim, 2).float() / self.dim))
+
+        if rope_scaling is not None and rope_scaling.get("rope_type") == "llama3":
+            factor = rope_scaling.get("factor", 8.0)
+            low_freq_factor = rope_scaling.get("low_freq_factor", 1.0)
+            high_freq_factor = rope_scaling.get("high_freq_factor", 4.0)
+            orig_max_pos = rope_scaling.get("original_max_position_embeddings", 8192)
+
+            low_freq_w = orig_max_pos / low_freq_factor
+            high_freq_w = orig_max_pos / high_freq_factor
+
+            scaled_inv_freq = []
+            for freq in inv_freq:
+                w = 2.0 * math.pi / freq.item()
+                if w < high_freq_w:
+                    scaled_inv_freq.append(freq.item())
+                elif w > low_freq_w:
+                    scaled_inv_freq.append(freq.item() / factor)
+                else:
+                    smooth = (orig_max_pos / w - high_freq_factor) / (low_freq_factor - high_freq_factor)
+                    scaled_freq = (1.0 - smooth) * (freq.item() / factor) + smooth * freq.item()
+                    scaled_inv_freq.append(scaled_freq)
+
+            inv_freq = torch.tensor(scaled_inv_freq, dtype=torch.float32)
+
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 
         t = torch.arange(self.max_position_embeddings, dtype=torch.float32)
@@ -50,3 +82,4 @@ class RotaryEmbedding(nn.Module):
             emb = torch.cat((freqs, freqs), dim=-1)
             return emb.cos()[None, None, :, :], emb.sin()[None, None, :, :]
         return self.cos_cached[:, :, :seq_len, :].to(device), self.sin_cached[:, :, :seq_len, :].to(device)
+
