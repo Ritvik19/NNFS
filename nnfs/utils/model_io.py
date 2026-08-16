@@ -7,6 +7,7 @@ import yaml
 from nnfs.models import (
     GPT1,
     GPT2,
+    GptOss,
     Llama1,
     Llama2,
     Llama3,
@@ -17,6 +18,7 @@ from nnfs.models import (
     Transformer,
     GPT1Config,
     GPT2Config,
+    GptOssConfig,
     Llama1Config,
     Llama2Config,
     Llama3Config,
@@ -29,7 +31,7 @@ from nnfs.models import (
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 
 Tokenizer = Union[CharTokenizer]
-Model = Union[GPT1, GPT2, PaLM, PaLM2, Transformer, Llama1, Llama2, Llama3, Mistral, MixtralMoE]
+Model = Union[GPT1, GPT2, PaLM, PaLM2, Transformer, Llama1, Llama2, Llama3, Mistral, MixtralMoE, GptOss]
 Config = Union[
     GPT1Config,
     GPT2Config,
@@ -41,6 +43,7 @@ Config = Union[
     Llama3Config,
     MistralConfig,
     MixtralMoEConfig,
+    GptOssConfig,
 ]
 
 MODEL_REGISTRY = {
@@ -54,6 +57,23 @@ MODEL_REGISTRY = {
     "llama3": (Llama3, Llama3Config),
     "mistral": (Mistral, MistralConfig),
     "mixtral_moe": (MixtralMoE, MixtralMoEConfig),
+    "gpt_oss_moe": (GptOss, GptOssConfig),
+    "gpt_oss": (GptOss, GptOssConfig),
+}
+
+
+CONFIG_REGISTRY = {
+    GPT1Config: GPT1,
+    GPT2Config: GPT2,
+    PaLMConfig: PaLM,
+    PaLM2Config: PaLM2,
+    TransformerConfig: Transformer,
+    Llama1Config: Llama1,
+    Llama2Config: Llama2,
+    Llama3Config: Llama3,
+    MistralConfig: Mistral,
+    MixtralMoEConfig: MixtralMoE,
+    GptOssConfig: GptOss,
 }
 
 
@@ -85,23 +105,48 @@ def build_model(config_file_path: str):
 
 def load_model(
     model_path: str,
-    model_name: str = "gpt1",
+    model_name: str | None = None,
     device: torch.device | str | None = None,
 ) -> Model:
-    if model_name not in MODEL_REGISTRY:
-        raise KeyError(
-            f"Unknown model_name {model_name!r}. Available: {sorted(MODEL_REGISTRY)}"
-        )
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     device = torch.device(device)
 
-    model_class, _ = MODEL_REGISTRY[model_name]
+    config_path = os.path.join(model_path, "config.pth")
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Configuration file not found: {config_path}")
+
     config = torch.load(
-        os.path.join(model_path, "config.pth"),
+        config_path,
         map_location=device,
         weights_only=False,
     )
+
+    if model_name is not None:
+        if model_name not in MODEL_REGISTRY:
+            raise KeyError(
+                f"Unknown model_name {model_name!r}. Available: {sorted(MODEL_REGISTRY)}"
+            )
+        model_class, _ = MODEL_REGISTRY[model_name]
+    else:
+        config_cls = type(config)
+        if config_cls in CONFIG_REGISTRY:
+            model_class = CONFIG_REGISTRY[config_cls]
+        else:
+            matched_cls = None
+            for reg_cfg_cls, reg_mdl_cls in CONFIG_REGISTRY.items():
+                if reg_cfg_cls.__name__ == config_cls.__name__:
+                    matched_cls = reg_mdl_cls
+                    break
+            if matched_cls is not None:
+                model_class = matched_cls
+            else:
+                raise ValueError(
+                    f"Could not infer model architecture from config type {config_cls.__name__!r}. "
+                    f"Available configs: {[c.__name__ for c in CONFIG_REGISTRY]}. "
+                    f"Please specify `model_name` explicitly."
+                )
+
     model = model_class(config)
     model.load_pretrained(model_path, map_location=device)
     model.to(device)

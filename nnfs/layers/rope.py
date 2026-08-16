@@ -64,6 +64,28 @@ class RotaryEmbedding(nn.Module):
                     scaled_inv_freq.append(scaled_freq)
 
             inv_freq = torch.tensor(scaled_inv_freq, dtype=torch.float32)
+        elif rope_scaling is not None and rope_scaling.get("rope_type") == "yarn":
+            factor = rope_scaling.get("factor", 32.0)
+            beta_fast = rope_scaling.get("beta_fast", 32.0)
+            beta_slow = rope_scaling.get("beta_slow", 1.0)
+            orig_max_pos = rope_scaling.get("original_max_position_embeddings", 4096)
+
+            low_freq_w = orig_max_pos / beta_slow
+            high_freq_w = orig_max_pos / beta_fast
+
+            scaled_inv_freq = []
+            for freq in inv_freq:
+                w = 2.0 * math.pi / freq.item()
+                if w < high_freq_w:
+                    scaled_inv_freq.append(freq.item())
+                elif w > low_freq_w:
+                    scaled_inv_freq.append(freq.item() / factor)
+                else:
+                    smooth = (orig_max_pos / w - beta_slow) / (beta_fast - beta_slow)
+                    scaled_freq = (1.0 - smooth) * (freq.item() / factor) + smooth * freq.item()
+                    scaled_inv_freq.append(scaled_freq)
+
+            inv_freq = torch.tensor(scaled_inv_freq, dtype=torch.float32)
 
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 

@@ -56,18 +56,26 @@ class SparseMoE(nn.Module):
         top_k_experts: int = 2,
         dropout: float = 0.1,
         bias: bool = False,
+        clamp_limit: float | None = None,
     ):
         super().__init__()
         self.d_model = d_model
         self.d_ff = d_ff
         self.num_experts = num_experts
         self.top_k_experts = top_k_experts
+        self.clamp_limit = clamp_limit
         self.router = TopKRouter(
             d_model, num_experts=num_experts, top_k=top_k_experts, bias=bias
         )
         self.experts = nn.ModuleList(
             [
-                SwiGLUMLP(d_model=d_model, d_ff=d_ff, dropout=dropout, bias=bias)
+                SwiGLUMLP(
+                    d_model=d_model,
+                    d_ff=d_ff,
+                    dropout=dropout,
+                    bias=bias,
+                    clamp_limit=clamp_limit,
+                )
                 for _ in range(num_experts)
             ]
         )

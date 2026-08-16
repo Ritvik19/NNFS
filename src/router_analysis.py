@@ -246,8 +246,8 @@ def main():
     parser.add_argument(
         "--model-name",
         type=str,
-        default="mixtral_moe",
-        help="Model architecture name in MODEL_REGISTRY",
+        default=None,
+        help="Model architecture name in MODEL_REGISTRY (auto-inferred from checkpoint if omitted)",
     )
     parser.add_argument(
         "--model-config",

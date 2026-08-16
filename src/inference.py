@@ -37,7 +37,7 @@ def main():
     else:
         raise FileNotFoundError(f"Inference config not found: {args.inference_config}")
 
-    model_name = inference_config.get("model_name", "gpt1")
+    model_name = inference_config.get("model_name", None)
     model_path = inference_config.get("model_path", "checkpoints")
     temperature = inference_config.get("temperature", 1.0)
     top_p = inference_config.get("top_p")

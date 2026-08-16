@@ -13,6 +13,7 @@ from .multi_query_attention import MultiQueryAttention
 from .sinusoidal_positional_encoding import SinusoidalPositionalEncoding
 from .alibi import ALiBiPositionalBias, get_alibi_slopes
 from .sparse_moe import SparseMoE, TopKRouter
+from .gpt_oss_attention import GptOssAttention
 
 __all__ = [
     "Embedding",
@@ -33,4 +34,5 @@ __all__ = [
     "get_alibi_slopes",
     "SparseMoE",
     "TopKRouter",
+    "GptOssAttention",
 ]

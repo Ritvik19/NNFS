@@ -92,10 +92,11 @@ nnfs/
 | Llama 1                      | [Architecture](./docs/models/llama1.md)      | 4,262,144             | [Link](https://wandb.ai/ritvik19/nnfs/runs/dkzq9y5e?nw=nwuserritvik19) | 0.40327    | 0.37973   |
 | Llama 2                      | [Architecture](./docs/models/llama2.md)      | 4,000,000             | [Link](https://wandb.ai/ritvik19/nnfs/runs/tkw5quka?nw=nwuserritvik19) | 0.47521    | 0.38264   |
 | Llama 3                      | [Architecture](./docs/models/llama3.md)      | 4,000,000             | -                                                                      | -          | -         |
-| Mistral                      | [Architecture](./docs/models/mistral.md)     | 4,000,000             | [Link](https://wandb.ai/ritvik19/nnfs/runs/rkegoz2o?nw=nwuserritvik19) | 0.4678     | 0.39532   |
+| Mistral                      | [Architecture](./docs/models/mistral.md)     | 4,000,000             | [Link](https://wandb.ai/ritvik19/nnfs/runs/rkegoz2o?nw=nwuserritvik19) | 0.46780    | 0.39532   |
 | Mistral - Interleaved SWA    | -                                            | 4,000,000             | [Link](https://wandb.ai/ritvik19/nnfs/runs/fvqrqysu?nw=nwuserritvik19) | 0.38006    | 0.38085   |
 | Mixtral MOE                  | [Architecture](./docs/models/mixtral_moe.md) | 4,008,192 / 1,648,896 | [Link](https://wandb.ai/ritvik19/nnfs/runs/60jeu7fc?nw=nwuserritvik19) | 0.45857    | 0.39268   |
 | Mixtral MOE + Load Balancing | -                                            | -                     | [Link](https://wandb.ai/ritvik19/nnfs/runs/60jeu7fc?nw=nwuserritvik19) | 0.44111    | 0.38565   |
+| GPT OSS MOE                  | [Architecture](./docs/models/gpt_oss.md)     | 4,011,280 / 1,717,520 | [Link](https://wandb.ai/ritvik19/nnfs/runs/uoq0cu05?nw=nwuserritvik19) | 0.4395     | 0.3852    |
 
 ---
 

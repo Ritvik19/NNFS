@@ -91,6 +91,48 @@ class TestModelLoading(unittest.TestCase):
                 loaded_out = loaded(x)
             torch.testing.assert_close(loaded_out, original_out)
 
+    def test_load_model_auto_infer(self):
+        with tempfile.TemporaryDirectory() as save_dir:
+            self.model.save_pretrained(save_dir)
+            loaded = load_model(save_dir, device="cpu")
+            self.assertIsInstance(loaded, GPT1)
+
+        with tempfile.TemporaryDirectory() as save_dir:
+            self.gpt2_model.save_pretrained(save_dir)
+            loaded = load_model(save_dir, device="cpu")
+            self.assertIsInstance(loaded, GPT2)
+
+    def test_load_model_gpt_oss_roundtrip(self):
+        from nnfs.models.gpt_oss import GptOss, GptOssConfig
+
+        config = GptOssConfig(
+            vocab_size=32,
+            block_size=16,
+            d_model=32,
+            n_layers=2,
+            n_heads=2,
+            n_kv_heads=1,
+            d_head=16,
+            num_experts=4,
+            top_k_experts=2,
+            d_ff=32,
+            dropout=0.0,
+            sliding_window=8,
+        )
+        model = GptOss(config)
+        model.eval()
+
+        with tempfile.TemporaryDirectory() as save_dir:
+            model.save_pretrained(save_dir)
+
+            # Test explicit model_name
+            loaded_explicit = load_model(save_dir, model_name="gpt_oss_moe", device="cpu")
+            self.assertIsInstance(loaded_explicit, GptOss)
+
+            # Test auto-inferred model_name=None
+            loaded_auto = load_model(save_dir, device="cpu")
+            self.assertIsInstance(loaded_auto, GptOss)
+
     def test_load_model_unknown_name(self):
         with tempfile.TemporaryDirectory() as save_dir:
             self.model.save_pretrained(save_dir)

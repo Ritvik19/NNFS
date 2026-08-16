@@ -13,12 +13,19 @@ class SwiGLUMLP(nn.Module):
     where linear transformations have no bias by default.
     """
 
-    def __init__(self, d_model: int, d_ff: int, dropout: float = 0.1, bias: bool = False):
+    def __init__(
+        self,
+        d_model: int,
+        d_ff: int,
+        dropout: float = 0.1,
+        bias: bool = False,
+        clamp_limit: float | None = None,
+    ):
         super().__init__()
         self.w_gate = Linear(d_model, d_ff, bias=bias)
         self.w_up = Linear(d_model, d_ff, bias=bias)
         self.w_down = Linear(d_ff, d_model, bias=bias)
-        self.act = SwiGLU()
+        self.act = SwiGLU(clamp_limit=clamp_limit)
         self.dropout = Dropout(dropout)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
