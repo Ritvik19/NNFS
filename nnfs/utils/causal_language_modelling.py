@@ -5,7 +5,7 @@ from typing import Union, Optional, Callable
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 from nnfs.models.gpt1 import GPT1, GPT1Config
 from nnfs.models.gpt2 import GPT2, GPT2Config
-from nnfs.losses.cross_entropy import CrossEntropy
+from nnfs.losses import CrossEntropy, LoadBalancingLoss
 from tqdm import tqdm
 
 Tokenizer = Union[CharTokenizer]
@@ -61,8 +61,10 @@ class CausalLanguageModelingTrainer:
         batch_size: int = 1,
         shuffle: bool = True,
         lr: float = 1e-3,
+        load_balancing_coef: float = 0.0,
     ):
         self.model = model
+        self.load_balancing_coef = float(load_balancing_coef)
         
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -91,10 +93,11 @@ class CausalLanguageModelingTrainer:
 
         self.val_dataloader = val_dataloader
         self.loss_fn = CrossEntropy()
+        self.lb_loss_fn = LoadBalancingLoss()
 
     def train_epoch(
         self,
-        on_step: Optional[Callable[[int, float], None]] = None,
+        on_step: Optional[Callable] = None,
         global_step: int = 0,
     ) -> tuple[float, int]:
         if self.train_dataloader is None:
@@ -107,7 +110,22 @@ class CausalLanguageModelingTrainer:
             x, y = x.to(self.device), y.to(self.device)
             self.optimizer.zero_grad()
             logits = self.model(x)
-            loss = self.loss_fn(logits.view(-1, logits.size(-1)), y.view(-1))
+            ce_loss = self.loss_fn(logits.view(-1, logits.size(-1)), y.view(-1))
+            
+            lb_loss_val = 0.0
+            if self.load_balancing_coef > 0:
+                router_outputs = None
+                if hasattr(self.model, "get_router_outputs"):
+                    router_outputs = self.model.get_router_outputs()
+                if router_outputs:
+                    lb_loss = self.lb_loss_fn(router_outputs)
+                    lb_loss_val = lb_loss.item()
+                    loss = ce_loss + self.load_balancing_coef * lb_loss
+                else:
+                    loss = ce_loss
+            else:
+                loss = ce_loss
+
             loss.backward()
             self.optimizer.step()
             step_loss = loss.item()
@@ -116,7 +134,10 @@ class CausalLanguageModelingTrainer:
             global_step += 1
             pbar.set_postfix(loss=f"{step_loss:.4f}", step=global_step)
             if on_step is not None:
-                on_step(global_step, step_loss)
+                try:
+                    on_step(global_step, step_loss, ce_loss.item(), lb_loss_val)
+                except TypeError:
+                    on_step(global_step, step_loss)
         avg_loss = total_loss / num_batches if num_batches > 0 else 0.0
         return avg_loss, global_step
 

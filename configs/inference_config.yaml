@@ -1,5 +1,5 @@
-model_name: "palm2"
-model_path: "checkpoints/palm2_tinystories"
+model_name: "mixtral_moe"
+model_path: "checkpoints/mixtral_moe_lb_tinystories"
 temperature: 0.6
 top_p: 0.9
 top_k: 40

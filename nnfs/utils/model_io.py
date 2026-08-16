@@ -11,6 +11,7 @@ from nnfs.models import (
     Llama2,
     Llama3,
     Mistral,
+    MixtralMoE,
     PaLM,
     PaLM2,
     Transformer,
@@ -20,6 +21,7 @@ from nnfs.models import (
     Llama2Config,
     Llama3Config,
     MistralConfig,
+    MixtralMoEConfig,
     PaLMConfig,
     PaLM2Config,
     TransformerConfig,
@@ -27,7 +29,7 @@ from nnfs.models import (
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 
 Tokenizer = Union[CharTokenizer]
-Model = Union[GPT1, GPT2, PaLM, PaLM2, Transformer, Llama1, Llama2, Llama3, Mistral]
+Model = Union[GPT1, GPT2, PaLM, PaLM2, Transformer, Llama1, Llama2, Llama3, Mistral, MixtralMoE]
 Config = Union[
     GPT1Config,
     GPT2Config,
@@ -38,6 +40,7 @@ Config = Union[
     Llama2Config,
     Llama3Config,
     MistralConfig,
+    MixtralMoEConfig,
 ]
 
 MODEL_REGISTRY = {
@@ -50,6 +53,7 @@ MODEL_REGISTRY = {
     "llama2": (Llama2, Llama2Config),
     "llama3": (Llama3, Llama3Config),
     "mistral": (Mistral, MistralConfig),
+    "mixtral_moe": (MixtralMoE, MixtralMoEConfig),
 }
 
 
@@ -66,6 +70,13 @@ def build_model(config_file_path: str):
     model = model_class(model_config(**config))
     num_params = sum(p.numel() for p in model.parameters())
     print(f"Number of parameters: {num_params:,}")
+    if model_name.endswith("_moe") or hasattr(model, "count_active_parameters"):
+        if hasattr(model, "count_active_parameters"):
+            active_params = model.count_active_parameters()
+        else:
+            active_params = num_params
+        print(f"Active parameters per token: {active_params:,}")
+
     for name, param in model.named_parameters():
         print(f"{name}: {param.numel():,}")
 

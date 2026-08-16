@@ -3,8 +3,9 @@ epochs: 1
 learning_rate: 0.0001
 max_vocab_size: 192
 data_path: "roneneldan/TinyStories"
-save_dir: "checkpoints/palm2_tinystories"
+save_dir: "checkpoints/mixtral_moe_lb_tinystories"
 log_every_steps: 1
+load_balancing_coef: 0.01
 wandb: true
 wandb_project: "nnfs"
-wandb_run_name: palm2_tinystories
+wandb_run_name: mixtral_moe_lb_tinystories

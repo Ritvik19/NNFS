@@ -12,6 +12,7 @@ from .rope import RotaryEmbedding, apply_rotary_pos_emb
 from .multi_query_attention import MultiQueryAttention
 from .sinusoidal_positional_encoding import SinusoidalPositionalEncoding
 from .alibi import ALiBiPositionalBias, get_alibi_slopes
+from .sparse_moe import SparseMoE, TopKRouter
 
 __all__ = [
     "Embedding",
@@ -30,4 +31,6 @@ __all__ = [
     "SinusoidalPositionalEncoding",
     "ALiBiPositionalBias",
     "get_alibi_slopes",
+    "SparseMoE",
+    "TopKRouter",
 ]

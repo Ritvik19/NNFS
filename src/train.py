@@ -56,16 +56,22 @@ def main():
         action="store_true",
         help="Disable wandb logging",
     )
+    parser.add_argument(
+        "--lb-coef",
+        type=float,
+        default=None,
+        help="Override auxiliary load balancing loss coefficient",
+    )
     args = parser.parse_args()
 
     # Load configurations
     train_config = {}
-    if os.path.exists(args.train_config):
+    if args.train_config and os.path.exists(args.train_config):
         with open(args.train_config, "r", encoding="utf-8") as f:
             train_config = yaml.safe_load(f) or {}
 
     model_config = {}
-    if os.path.exists(args.model_config):
+    if args.model_config and os.path.exists(args.model_config):
         with open(args.model_config, "r", encoding="utf-8") as f:
             model_config = yaml.safe_load(f) or {}
 
@@ -75,6 +81,11 @@ def main():
     max_vocab_size = train_config.get("max_vocab_size", 192)
     data_path = train_config.get("data_path")
     save_dir = train_config.get("save_dir", "checkpoints")
+    load_balancing_coef = (
+        args.lb_coef
+        if args.lb_coef is not None
+        else train_config.get("load_balancing_coef", 0.0)
+    )
 
     use_wandb = train_config.get("wandb", True) and not args.no_wandb
     wandb_project = args.wandb_project or train_config.get("wandb_project", "nnfs")
@@ -82,12 +93,13 @@ def main():
 
     logger.info("Train config: %s", train_config)
     logger.info("Model config: %s", model_config)
+    logger.info("Load balancing loss coefficient: %f", load_balancing_coef)
 
     if use_wandb:
         wandb.init(
             project=wandb_project,
             name=wandb_run_name,
-            config={**train_config, **model_config},
+            config={**train_config, **model_config, "load_balancing_coef": load_balancing_coef},
         )
         logger.info("wandb run initialized: %s / %s", wandb_project, wandb.run.name)
 
@@ -125,18 +137,23 @@ def main():
         optimizer=optimizer,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
+        load_balancing_coef=load_balancing_coef,
     )
 
     logger.info("Starting training for %d epochs on device: %s", epochs, trainer.device)
     global_step = 0
     log_every = train_config.get("log_every_steps", 1)
 
-    def on_step(step: int, loss: float) -> None:
+    def on_step(
+        step: int, loss: float, ce_loss: float = 0.0, lb_loss: float = 0.0
+    ) -> None:
         if not use_wandb or step % log_every != 0:
             return
         wandb.log(
             {
                 "train/loss": loss,
+                "train/ce_loss": ce_loss,
+                "train/lb_loss": lb_loss,
                 "lr": learning_rate,
             },
             step=step,
