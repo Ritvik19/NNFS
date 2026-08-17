@@ -11,6 +11,7 @@ from nnfs.models import (
     Llama1,
     Llama2,
     Llama3,
+    Llama4,
     Mistral,
     MixtralMoE,
     PaLM,
@@ -22,6 +23,7 @@ from nnfs.models import (
     Llama1Config,
     Llama2Config,
     Llama3Config,
+    Llama4Config,
     MistralConfig,
     MixtralMoEConfig,
     PaLMConfig,
@@ -31,7 +33,7 @@ from nnfs.models import (
 from nnfs.preprocessors.char_tokenizer import CharTokenizer
 
 Tokenizer = Union[CharTokenizer]
-Model = Union[GPT1, GPT2, PaLM, PaLM2, Transformer, Llama1, Llama2, Llama3, Mistral, MixtralMoE, GptOss]
+Model = Union[GPT1, GPT2, PaLM, PaLM2, Transformer, Llama1, Llama2, Llama3, Llama4, Mistral, MixtralMoE, GptOss]
 Config = Union[
     GPT1Config,
     GPT2Config,
@@ -41,6 +43,7 @@ Config = Union[
     Llama1Config,
     Llama2Config,
     Llama3Config,
+    Llama4Config,
     MistralConfig,
     MixtralMoEConfig,
     GptOssConfig,
@@ -55,6 +58,10 @@ MODEL_REGISTRY = {
     "llama1": (Llama1, Llama1Config),
     "llama2": (Llama2, Llama2Config),
     "llama3": (Llama3, Llama3Config),
+    "llama4": (Llama4, Llama4Config),
+    "llama_4": (Llama4, Llama4Config),
+    "llama4_moe": (Llama4, Llama4Config),
+    "llama_4_moe": (Llama4, Llama4Config),
     "mistral": (Mistral, MistralConfig),
     "mixtral_moe": (MixtralMoE, MixtralMoEConfig),
     "gpt_oss_moe": (GptOss, GptOssConfig),
@@ -71,6 +78,7 @@ CONFIG_REGISTRY = {
     Llama1Config: Llama1,
     Llama2Config: Llama2,
     Llama3Config: Llama3,
+    Llama4Config: Llama4,
     MistralConfig: Mistral,
     MixtralMoEConfig: MixtralMoE,
     GptOssConfig: GptOss,

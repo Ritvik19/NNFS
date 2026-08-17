@@ -14,6 +14,8 @@ from .sinusoidal_positional_encoding import SinusoidalPositionalEncoding
 from .alibi import ALiBiPositionalBias, get_alibi_slopes
 from .sparse_moe import SparseMoE, TopKRouter
 from .gpt_oss_attention import GptOssAttention
+from .shared_sparse_moe import SharedSparseMoE
+from .llama4_attention import Llama4Attention
 
 __all__ = [
     "Embedding",
@@ -35,4 +37,6 @@ __all__ = [
     "SparseMoE",
     "TopKRouter",
     "GptOssAttention",
+    "SharedSparseMoE",
+    "Llama4Attention",
 ]

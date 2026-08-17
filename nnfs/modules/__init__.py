@@ -9,6 +9,7 @@ from .palm2_transformer_block import PaLM2TransformerBlock
 from .mistral_transformer_block import MistralTransformerBlock
 from .mixtral_transformer_block import MixtralTransformerBlock
 from .gpt_oss_transformer_block import GptOssTransformerBlock
+from .llama4_transformer_block import Llama4TransformerBlock
 
 __all__ = [
     "GPT1TransformerBlock",
@@ -22,6 +23,7 @@ __all__ = [
     "MistralTransformerBlock",
     "MixtralTransformerBlock",
     "GptOssTransformerBlock",
+    "Llama4TransformerBlock",
 ]
 
 

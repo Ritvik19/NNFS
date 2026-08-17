@@ -1,5 +1,5 @@
-model_name: "gpt_oss_moe"
-model_path: "checkpoints/gpt_oss_moe_tinystories"
+model_name: "llama4_moe"
+model_path: "checkpoints/llama4_tinystories"
 temperature: 0.6
 top_p: 0.9
 top_k: 40

@@ -9,6 +9,7 @@ from .llama3 import Llama3, Llama3Config
 from .mistral import Mistral, MistralConfig
 from .mixtral_moe import MixtralMoE, MixtralMoEConfig
 from .gpt_oss import GptOss, GptOssConfig
+from .llama4 import Llama4, Llama4Config
 
 __all__ = [
     "GPT1",
@@ -33,6 +34,8 @@ __all__ = [
     "MixtralMoEConfig",
     "GptOss",
     "GptOssConfig",
+    "Llama4",
+    "Llama4Config",
 ]
 
 

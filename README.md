@@ -45,6 +45,7 @@ nnfs/
 - **LLaMA 1**: Pre-RMSNorm decoder-only transformer with SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free projections.
 - **LLaMA 2**: Pre-RMSNorm decoder-only transformer with Grouped-Query Attention (GQA), SwiGLU activations, Rotary Position Embeddings (RoPE), and bias-free projections.
 - **LLaMA 3**: Pre-RMSNorm decoder-only transformer with Grouped-Query Attention (GQA), SwiGLU activations, Llama 3 piecewise frequency-scaled Rotary Position Embeddings ($\theta = 500,000.0$), and tied weight projections.
+- **LLaMA 4 (Scout & Maverick)**: Pre-RMSNorm decoder-only Mixture-of-Experts (MoE) transformer with Shared + Top-1 Routed SwiGLU experts, iRoPE (3:1 interleaved Chunked RoPE local attention and Global NoPE full causal attention), and inference-time attention temperature scaling.
 - **Transformer**: Modular decoder-only transformer with configurable positional encodings (sinusoidal, learned, ALiBi, RoPE, none), configurable activation functions (ReLU, GELU, SwiGLU), configurable normalization (LayerNorm, RMSNorm), and post-LN / pre-LN options.
 
 ### 📐 Layers & Modules ([Overview](./docs/layers/README.md))
@@ -53,6 +54,8 @@ nnfs/
 - **[`SinusoidalPositionalEncoding`](./docs/layers/sinusoidal_positional_encoding.md)**: Fixed sine/cosine positional encodings from Vaswani et al. (2017).
 - **[`MultiQueryAttention`](./docs/layers/multi_query_attention.md)**: Multi-Query Attention with single shared Key/Value head and RoPE.
 - **[`GroupedQueryAttention`](./docs/layers/grouped_query_attention.md)**: Grouped-Query Attention with configurable KV head groups and RoPE scaling.
+- **[`SharedSparseMoE`](./docs/models/llama4.md)**: Shared-and-routed sparse MoE layer with 1 universal shared expert and Top-1 routed experts.
+- **[`Llama4Attention`](./docs/models/llama4.md)**: Attention layer supporting iRoPE chunked/global masking and temperature scaling.
 - **[`SwiGLUMLP`](./docs/layers/swiglu_mlp.md)**: Feed-forward expansion network with SwiGLU gating activation.
 - **[`RotaryEmbedding`](./docs/layers/rope.md)**: Rotary position embeddings (RoPE) applied to query and key projections with optional Llama 3 frequency scaling.
 - **[`CausalMultiHeadAttention`](./docs/layers/causal_multi_head_attention.md)**: Scaled dot-product multi-head causal self-attention with masking.
@@ -74,29 +77,30 @@ nnfs/
 
 ### 🗗 Model Training Logs
 
-| Model                        | Architecture                                 | # Parameters          | Training Log                                                           | Train Loss | Eval Loss |
-| ---------------------------- | -------------------------------------------- | --------------------- | ---------------------------------------------------------------------- | ---------- | --------- |
-| Transformer                  | [Architecture](./docs/models/transformer.md) | 3,224,576             | [link](https://wandb.ai/ritvik19/nnfs/runs/stugg5kc?nw=nwuserritvik19) | 0.57989    | 0.50835   |
-| Transformer - GELU           | -                                            | 3,224,576             | [link](https://wandb.ai/ritvik19/nnfs/runs/4vlaylw0?nw=nwuserritvik19) | 0.50243    | 0.48441   |
-| Transformer - SwiGLU         | -                                            | 4,268,032             | [link](https://wandb.ai/ritvik19/nnfs/runs/23io8gg9?nw=nwuserritvik19) | 0.50665    | 0.47742   |
-| Transformer - Learned PE     | -                                            | 3,486,720             | [link](https://wandb.ai/ritvik19/nnfs/runs/o4jjrvkx?nw=nwuserritvik19) | 0.5911     | 0.52374   |
-| Transformer - ALiBi          | -                                            | 3,224,576             | [link](https://wandb.ai/ritvik19/nnfs/runs/gsk5gty0?nw=nwuserritvik19) | 0.51397    | 0.46871   |
-| Transformer - RoPE           | -                                            | 3,224,576             | [link](https://wandb.ai/ritvik19/nnfs/runs/stfws7au?nw=nwuserritvik19) | 0.50446    | 0.47498   |
-| Transformer - RMSNorm        | -                                            | 3,224,576             | [link](https://wandb.ai/ritvik19/nnfs/runs/hcfuzjx1?nw=nwuserritvik19) | 0.65418    | 0.53732   |
-| Transformer - MQA            | -                                            | 2,961,408             | [link](https://wandb.ai/ritvik19/nnfs/runs/dl4bi38t?nw=nwuserritvik19) | 0.69114    | 0.57979   |
-| Transformer - GQA            | -                                            | 2,961,408             | [link](https://wandb.ai/ritvik19/nnfs/runs/chbx0ofp?nw=nwuserritvik19) | 0.56067    | 0.51578   |
-| GPT1                         | [Architecture](./docs/models/gpt1.md)        | 3,486,720             | [link](https://wandb.ai/ritvik19/nnfs/runs/fhjgffh9?nw=nwuserritvik19) | 0.63432    | 0.51363   |
-| GPT2                         | [Architecture](./docs/models/gpt2.md)        | 3,487,232             | [link](https://wandb.ai/ritvik19/nnfs/runs/rdr6rk7j?nw=nwuserritvik19) | 0.56123    | 0.47952   |
-| PaLM                         | [Architecture](./docs/models/palm.md)        | 3,869,184             | [Link](https://wandb.ai/ritvik19/nnfs/runs/ojgu35k6?nw=nwuserritvik19) | 0.42648    | 0.42843   |
-| PaLM 2                       | [Architecture](./docs/models/palm2.md)       | 3,998,976             | [Link](https://wandb.ai/ritvik19/nnfs/runs/plj8t4k0?nw=nwuserritvik19) | 0.41657    | 0.42777   |
-| Llama 1                      | [Architecture](./docs/models/llama1.md)      | 4,262,144             | [Link](https://wandb.ai/ritvik19/nnfs/runs/dkzq9y5e?nw=nwuserritvik19) | 0.40327    | 0.37973   |
-| Llama 2                      | [Architecture](./docs/models/llama2.md)      | 4,000,000             | [Link](https://wandb.ai/ritvik19/nnfs/runs/tkw5quka?nw=nwuserritvik19) | 0.47521    | 0.38264   |
-| Llama 3                      | [Architecture](./docs/models/llama3.md)      | 4,000,000             | -                                                                      | -          | -         |
-| Mistral                      | [Architecture](./docs/models/mistral.md)     | 4,000,000             | [Link](https://wandb.ai/ritvik19/nnfs/runs/rkegoz2o?nw=nwuserritvik19) | 0.46780    | 0.39532   |
-| Mistral - Interleaved SWA    | -                                            | 4,000,000             | [Link](https://wandb.ai/ritvik19/nnfs/runs/fvqrqysu?nw=nwuserritvik19) | 0.38006    | 0.38085   |
-| Mixtral MOE                  | [Architecture](./docs/models/mixtral_moe.md) | 4,008,192 / 1,648,896 | [Link](https://wandb.ai/ritvik19/nnfs/runs/60jeu7fc?nw=nwuserritvik19) | 0.45857    | 0.39268   |
-| Mixtral MOE + Load Balancing | -                                            | -                     | [Link](https://wandb.ai/ritvik19/nnfs/runs/60jeu7fc?nw=nwuserritvik19) | 0.44111    | 0.38565   |
-| GPT OSS MOE                  | [Architecture](./docs/models/gpt_oss.md)     | 4,011,280 / 1,717,520 | [Link](https://wandb.ai/ritvik19/nnfs/runs/uoq0cu05?nw=nwuserritvik19) | 0.4395     | 0.3852    |
+| Model                        | Architecture                                 | # Parameters          | Train Loss | Eval Loss |
+| ---------------------------- | -------------------------------------------- | --------------------- | ---------- | --------- |
+| Transformer                  | [Architecture](./docs/models/transformer.md) | 3,224,576             | 0.57989    | 0.50835   |
+| Transformer - GELU           | -                                            | 3,224,576             | 0.50243    | 0.48441   |
+| Transformer - SwiGLU         | -                                            | 4,268,032             | 0.50665    | 0.47742   |
+| Transformer - Learned PE     | -                                            | 3,486,720             | 0.5911     | 0.52374   |
+| Transformer - ALiBi          | -                                            | 3,224,576             | 0.51397    | 0.46871   |
+| Transformer - RoPE           | -                                            | 3,224,576             | 0.50446    | 0.47498   |
+| Transformer - RMSNorm        | -                                            | 3,224,576             | 0.65418    | 0.53732   |
+| Transformer - MQA            | -                                            | 2,961,408             | 0.69114    | 0.57979   |
+| Transformer - GQA            | -                                            | 2,961,408             | 0.56067    | 0.51578   |
+| GPT1                         | [Architecture](./docs/models/gpt1.md)        | 3,486,720             | 0.63432    | 0.51363   |
+| GPT2                         | [Architecture](./docs/models/gpt2.md)        | 3,487,232             | 0.56123    | 0.47952   |
+| PaLM                         | [Architecture](./docs/models/palm.md)        | 3,869,184             | 0.42648    | 0.42843   |
+| PaLM 2                       | [Architecture](./docs/models/palm2.md)       | 3,998,976             | 0.41657    | 0.42777   |
+| Llama 1                      | [Architecture](./docs/models/llama1.md)      | 4,262,144             | 0.40327    | 0.37973   |
+| Llama 2                      | [Architecture](./docs/models/llama2.md)      | 4,000,000             | 0.47521    | 0.38264   |
+| Llama 3                      | [Architecture](./docs/models/llama3.md)      | 4,000,000             | -          | -         |
+| Llama 4                      | [Architecture](./docs/models/llama4.md)      | 4,401,408 / 1,648,896 | 0.48811    | 0.4174    |
+| Mistral                      | [Architecture](./docs/models/mistral.md)     | 4,000,000             | 0.46780    | 0.39532   |
+| Mistral - Interleaved SWA    | -                                            | 4,000,000             | 0.38006    | 0.38085   |
+| Mixtral MOE                  | [Architecture](./docs/models/mixtral_moe.md) | 4,008,192 / 1,648,896 | 0.45857    | 0.39268   |
+| Mixtral MOE + Load Balancing | -                                            | -                     | 0.44111    | 0.38565   |
+| GPT OSS MOE                  | [Architecture](./docs/models/gpt_oss.md)     | 4,011,280 / 1,717,520 | 0.4395     | 0.3852    |
 
 ---
 
